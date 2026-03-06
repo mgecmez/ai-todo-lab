@@ -1,5 +1,4 @@
 <Solution>
-  <Folder Name="/backend/">
-    <Project Path="backend/TodoApp.Api/TodoApp.Api.csproj" />
-  </Folder>
+  <Project Path="TodoApp.Api/TodoApp.Api.csproj" />
+  <Project Path="TodoApp.Api.Tests/TodoApp.Api.Tests.csproj" />
 </Solution>
