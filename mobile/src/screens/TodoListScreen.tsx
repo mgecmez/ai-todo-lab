@@ -16,6 +16,7 @@ import ScreenGradient from '../components/ScreenGradient';
 import SearchBar from '../components/SearchBar';
 import type { TodoListScreenProps } from '../navigation/types';
 import { deleteTodo, getTodos, toggleTodo } from '../services/api/todosApi';
+import { friendlyErrorMessage, getCachedTodos, setCachedTodos } from '../services/cache/todosCacheService';
 import { colors, fontSize, radius, shadows, spacing } from '../theme/tokens';
 import type { Todo } from '../types/todo';
 
@@ -110,15 +111,34 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
     : todos;
 
   const load = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
     setError(null);
 
+    // 1) Cache'i oku.
+    const cached = await getCachedTodos();
+
+    if (cached !== null) {
+      // Cache varsa listeyi anında göster; spinner gerekmez.
+      setTodos(cached);
+      setLoading(false);
+    } else if (!isRefresh) {
+      // Cache yoksa ve ilk yükleme ise spinner göster.
+      setLoading(true);
+    }
+
+    if (isRefresh) setRefreshing(true);
+
+    // 2) Her durumda API'den taze veri çek.
     try {
-      const data = await getTodos();
-      setTodos(data);
+      const apiTodos = await getTodos();
+      // 3) API başarılıysa listeyi güncelle ve cache'e yaz.
+      setTodos(apiTodos);
+      setCachedTodos(apiTodos);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Veriler yüklenemedi.');
+      // Cache varsa: kullanıcı zaten listeyi görüyor; sessizce devam et.
+      // Cache yoksa: hata ekranını göster.
+      if (cached === null) {
+        setError(friendlyErrorMessage(e));
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -150,14 +170,18 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
 
     try {
       const updated = await toggleTodo(id);
-      // API yanıtıyla kesin state'i yerleştir (sunucu değeri doğru kaynak)
-      setTodos((prev) => prev.map((t) => (t.id === id ? updated : t)));
+      // API yanıtıyla kesin state'i yerleştir ve cache'i güncelle.
+      setTodos((prev) => {
+        const next = prev.map((t) => (t.id === id ? updated : t));
+        setCachedTodos(next);
+        return next;
+      });
     } catch (e) {
       // Başarısız: optimistic değişikliği geri al
       setTodos((prev) =>
         prev.map((t) => (t.id === id ? { ...t, isCompleted: !t.isCompleted } : t)),
       );
-      Alert.alert('Hata', e instanceof Error ? e.message : 'Toggle işlemi başarısız.');
+      Alert.alert('Hata', friendlyErrorMessage(e));
     } finally {
       setBusy(id, false);
     }
@@ -178,9 +202,16 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
     setBusy(id, true);
     try {
       await deleteTodo(id);
-      await load(true);
+      // Silinen öğeyi state'ten ve cache'ten anında kaldır.
+      // load(true) yerine doğrudan güncelleme: API zaten başarılı döndü,
+      // tüm listeyi yeniden çekmeye gerek yok.
+      setTodos((prev) => {
+        const next = prev.filter((t) => t.id !== id);
+        setCachedTodos(next);
+        return next;
+      });
     } catch (e) {
-      Alert.alert('Hata', e instanceof Error ? e.message : 'Silme işlemi başarısız.');
+      Alert.alert('Hata', friendlyErrorMessage(e));
     } finally {
       setBusy(id, false);
     }

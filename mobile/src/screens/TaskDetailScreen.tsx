@@ -12,6 +12,7 @@ import {
 import ScreenGradient from '../components/ScreenGradient';
 import type { TaskDetailScreenProps } from '../navigation/types';
 import { deleteTodo, toggleTodo } from '../services/api/todosApi';
+import { friendlyErrorMessage, getCachedTodos, setCachedTodos } from '../services/cache/todosCacheService';
 import { colors, fontSize, radius, shadows, spacing } from '../theme/tokens';
 import type { Todo } from '../types/todo';
 
@@ -74,8 +75,13 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
     try {
       const updated = await toggleTodo(todo.id);
       setTodo(updated); // API'dan dönen güncel todo state'i günceller
+      // Cache'teki ilgili öğeyi de güncelle.
+      const cached = await getCachedTodos();
+      if (cached !== null) {
+        await setCachedTodos(cached.map((t) => (t.id === updated.id ? updated : t)));
+      }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Toggle işlemi başarısız.';
+      const msg = friendlyErrorMessage(e);
       setActionError(msg);
       Alert.alert('Hata', msg);
     } finally {
@@ -101,9 +107,14 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
     setActionError(null);
     try {
       await deleteTodo(todo.id);
+      // Cache'ten kaldır; liste ekranı döndüğünde stale veri görmez.
+      const cached = await getCachedTodos();
+      if (cached !== null) {
+        await setCachedTodos(cached.filter((t) => t.id !== todo.id));
+      }
       navigation.goBack(); // → listeye dön; list useFocusEffect ile yenilenir
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Silme işlemi başarısız.';
+      const msg = friendlyErrorMessage(e);
       setActionError(msg);
       Alert.alert('Hata', msg);
       setDeleting(false);

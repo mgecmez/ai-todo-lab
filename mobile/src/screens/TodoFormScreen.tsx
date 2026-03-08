@@ -6,6 +6,7 @@ import ScreenGradient from '../components/ScreenGradient';
 import SecondaryButton from '../components/SecondaryButton';
 import type { TodoFormScreenProps } from '../navigation/types';
 import { createTodo, updateTodo } from '../services/api/todosApi';
+import { friendlyErrorMessage, getCachedTodos, setCachedTodos } from '../services/cache/todosCacheService';
 import { colors, fontSize, spacing } from '../theme/tokens';
 
 export default function TodoFormScreen({ navigation, route }: TodoFormScreenProps) {
@@ -36,20 +37,30 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
 
     try {
       if (isEdit && editTodo) {
-        await updateTodo(editTodo.id, {
+        const updated = await updateTodo(editTodo.id, {
           title: title.trim(),
           description: description.trim() || undefined,
           isCompleted: editTodo.isCompleted,
         });
+        // Güncellenen todo'yu cache'te yerine koy.
+        const cached = await getCachedTodos();
+        if (cached !== null) {
+          await setCachedTodos(cached.map((t) => (t.id === updated.id ? updated : t)));
+        }
       } else {
-        await createTodo({
+        const created = await createTodo({
           title: title.trim(),
           description: description.trim() || undefined,
         });
+        // Yeni todo'yu cache'in başına ekle (en güncel sıralama).
+        const cached = await getCachedTodos();
+        if (cached !== null) {
+          await setCachedTodos([created, ...cached]);
+        }
       }
       navigation.goBack();
     } catch (e) {
-      setSaveError(e instanceof Error ? e.message : 'Kaydedilemedi.');
+      setSaveError(friendlyErrorMessage(e));
     } finally {
       setSaving(false);
     }
