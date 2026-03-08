@@ -1,18 +1,17 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
 using TodoApp.Api.Models;
 
 namespace TodoApp.Api.Tests;
 
-public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+public class TodoApiIntegrationTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    public TodoApiIntegrationTests(WebApplicationFactory<Program> factory)
+    public TodoApiIntegrationTests(CustomWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
     }

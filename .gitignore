@@ -16,6 +16,11 @@ yarn-error.log*
 **/bin/
 **/obj/
 
+# SQLite — local database dosyası repoya girmemeli
+*.db
+*.db-shm
+*.db-wal
+
 # VS Code
 .vscode/
 
