@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import FormField from '../components/FormField';
+import PrimaryButton from '../components/PrimaryButton';
+import ScreenGradient from '../components/ScreenGradient';
+import SecondaryButton from '../components/SecondaryButton';
 import type { TodoFormScreenProps } from '../navigation/types';
 import { createTodo, updateTodo } from '../services/api/todosApi';
+import { colors, fontSize, spacing } from '../theme/tokens';
 
 export default function TodoFormScreen({ navigation, route }: TodoFormScreenProps) {
   const isEdit = route.params.mode === 'edit';
@@ -58,128 +56,67 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Başlık *</Text>
-      <TextInput
-        style={[styles.input, titleError ? styles.inputError : null]}
-        placeholder="Görev başlığı"
-        value={title}
-        onChangeText={(t) => {
-          setTitle(t);
-          if (titleError) setTitleError(null);
-        }}
-        editable={!saving}
-        returnKeyType="next"
-      />
-      {titleError && <Text style={styles.fieldError}>{titleError}</Text>}
+    <ScreenGradient>
+      <View style={styles.container}>
+        <FormField
+          label="Başlık *"
+          value={title}
+          onChangeText={(t) => {
+            setTitle(t);
+            if (titleError) setTitleError(null);
+          }}
+          placeholder="Görev başlığı"
+          icon="checkbox-outline"
+          editable={!saving}
+          returnKeyType="next"
+          error={titleError}
+        />
 
-      <Text style={styles.label}>Açıklama</Text>
-      <TextInput
-        style={[styles.input, styles.multiline]}
-        placeholder="İsteğe bağlı açıklama"
-        value={description}
-        onChangeText={setDescription}
-        editable={!saving}
-        multiline
-        numberOfLines={3}
-        returnKeyType="done"
-      />
+        <FormField
+          label="Açıklama"
+          value={description}
+          onChangeText={setDescription}
+          placeholder="İsteğe bağlı açıklama"
+          icon="reorder-three-outline"
+          multiline
+          editable={!saving}
+          returnKeyType="done"
+        />
 
-      {saveError && <Text style={styles.saveError}>⚠ {saveError}</Text>}
+        {saveError ? (
+          <Text style={styles.saveError}>⚠ {saveError}</Text>
+        ) : null}
 
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={styles.cancelBtn}
-          onPress={navigation.goBack}
-          disabled={saving}
-        >
-          <Text style={styles.cancelText}>İptal</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <Text style={styles.saveText}>{isEdit ? 'Güncelle' : 'Kaydet'}</Text>
-          )}
-        </TouchableOpacity>
+        <View style={styles.actions}>
+          <SecondaryButton
+            label="İptal"
+            onPress={navigation.goBack}
+            disabled={saving}
+          />
+          <PrimaryButton
+            label={isEdit ? 'Güncelle' : 'Kaydet'}
+            onPress={handleSave}
+            loading={saving}
+          />
+        </View>
       </View>
-    </View>
+    </ScreenGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    // backgroundColor navigator'ın contentStyle'ından geliyor — burada tekrar gerekmez
-  },
-  label: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 4,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 12,
-    backgroundColor: '#fafafa',
-  },
-  inputError: {
-    borderColor: '#c0392b',
-  },
-  multiline: {
-    height: 90,
-    textAlignVertical: 'top',
-  },
-  fieldError: {
-    color: '#c0392b',
-    fontSize: 13,
-    marginTop: -8,
-    marginBottom: 10,
+    padding: spacing.xl,
   },
   saveError: {
-    color: '#c0392b',
-    fontSize: 14,
-    marginBottom: 12,
+    fontSize: fontSize.body,
+    color: colors.delete,
+    marginBottom: spacing.md,
   },
   actions: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 8,
-  },
-  cancelBtn: {
-    flex: 1,
-    padding: 14,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    alignItems: 'center',
-  },
-  cancelText: {
-    fontSize: 16,
-    color: '#555',
-  },
-  saveBtn: {
-    flex: 1,
-    padding: 14,
-    borderRadius: 8,
-    backgroundColor: '#2563eb',
-    alignItems: 'center',
-  },
-  saveBtnDisabled: {
-    backgroundColor: '#93b4f5',
-  },
-  saveText: {
-    fontSize: 16,
-    color: '#fff',
-    fontWeight: 'bold',
+    gap: spacing.md,
+    marginTop: spacing.sm,
   },
 });

@@ -11,8 +11,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import FloatingActionButton from '../components/FloatingActionButton';
+import ScreenGradient from '../components/ScreenGradient';
+import SearchBar from '../components/SearchBar';
 import type { TodoListScreenProps } from '../navigation/types';
 import { deleteTodo, getTodos, toggleTodo } from '../services/api/todosApi';
+import { colors, fontSize, radius, shadows, spacing } from '../theme/tokens';
 import type { Todo } from '../types/todo';
 
 function formatDate(iso: string): string {
@@ -23,36 +27,66 @@ function formatDate(iso: string): string {
 interface TodoItemProps {
   todo: Todo;
   busy: boolean;
+  onDetail: (todo: Todo) => void;
   onEdit: (todo: Todo) => void;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
-function TodoItem({ todo, busy, onEdit, onToggle, onDelete }: TodoItemProps) {
+function TodoItem({ todo, busy, onDetail, onEdit, onToggle, onDelete }: TodoItemProps) {
   return (
-    <View style={[styles.item, busy && styles.itemBusy]}>
+    <View style={[styles.card, busy && styles.cardBusy]}>
+      {/* ── Toggle (checkbox) ─────────────────────────────── */}
       <TouchableOpacity
-        style={styles.itemCheckbox}
+        style={styles.checkboxZone}
         onPress={() => onToggle(todo.id)}
         disabled={busy}
         activeOpacity={0.6}
       >
-        <Text style={styles.checkboxIcon}>{todo.isCompleted ? '☑' : '☐'}</Text>
+        <Ionicons
+          name={todo.isCompleted ? 'checkbox' : 'square-outline'}
+          size={22}
+          color={todo.isCompleted ? colors.primary : colors.textOnCardMeta}
+        />
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.itemBody} onPress={() => onEdit(todo)} disabled={busy} activeOpacity={0.7}>
-        <Text style={[styles.itemTitle, todo.isCompleted && styles.completed]} numberOfLines={2}>
+      {/* ── Body — tıklanınca TaskDetail ──────────────────── */}
+      <TouchableOpacity
+        style={styles.cardBody}
+        onPress={() => onDetail(todo)}
+        disabled={busy}
+        activeOpacity={0.7}
+      >
+        <Text
+          style={[styles.cardTitle, todo.isCompleted && styles.cardTitleCompleted]}
+          numberOfLines={2}
+        >
           {todo.title}
         </Text>
-        <Text style={styles.itemDate}>{formatDate(todo.createdAt)}</Text>
+        <Text style={styles.cardMeta}>{formatDate(todo.createdAt)}</Text>
       </TouchableOpacity>
 
+      {/* ── Sağ taraf: busy iken spinner, değilse edit + delete ── */}
       {busy ? (
-        <ActivityIndicator size="small" color="#2563eb" style={styles.itemAction} />
+        <ActivityIndicator size="small" color={colors.primary} style={styles.actionZone} />
       ) : (
-        <TouchableOpacity style={styles.itemAction} onPress={() => onDelete(todo.id)} activeOpacity={0.6}>
-          <Ionicons name="trash-outline" size={20} color="#e74c3c" />
-        </TouchableOpacity>
+        <View style={styles.actionZone}>
+          <TouchableOpacity
+            onPress={() => onEdit(todo)}
+            activeOpacity={0.6}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 4 }}
+          >
+            <Ionicons name="pencil-outline" size={18} color={colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => onDelete(todo.id)}
+            activeOpacity={0.6}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
+            style={styles.deleteIcon}
+          >
+            <Ionicons name="trash-outline" size={18} color={colors.delete} />
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
@@ -64,6 +98,16 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
+  const [query, setQuery] = useState('');
+
+  const trimmed = query.trim().toLowerCase();
+  const filteredTodos = trimmed
+    ? todos.filter(
+        (t) =>
+          t.title.toLowerCase().includes(trimmed) ||
+          (t.description ?? '').toLowerCase().includes(trimmed),
+      )
+    : todos;
 
   const load = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -81,7 +125,6 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
     }
   }, []);
 
-  // Form'dan geri dönüş dahil her ekran odaklanmasında listeyi yenile.
   useFocusEffect(
     useCallback(() => {
       load();
@@ -98,10 +141,22 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
 
   async function handleToggle(id: string) {
     setBusy(id, true);
+
+    // Optimistic update: listeyi yeniden yüklemeden anlık olarak güncelle.
+    // load(true) çağrısı RefreshControl'ü tetikler ve iOS'ta scroll jump yaratır.
+    setTodos((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, isCompleted: !t.isCompleted } : t)),
+    );
+
     try {
-      await toggleTodo(id);
-      await load(true);
+      const updated = await toggleTodo(id);
+      // API yanıtıyla kesin state'i yerleştir (sunucu değeri doğru kaynak)
+      setTodos((prev) => prev.map((t) => (t.id === id ? updated : t)));
     } catch (e) {
+      // Başarısız: optimistic değişikliği geri al
+      setTodos((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, isCompleted: !t.isCompleted } : t)),
+      );
       Alert.alert('Hata', e instanceof Error ? e.message : 'Toggle işlemi başarısız.');
     } finally {
       setBusy(id, false);
@@ -133,87 +188,100 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
-        <Text style={styles.hint}>Yükleniyor…</Text>
-      </View>
+      <ScreenGradient>
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={colors.textOnDark} />
+          <Text style={styles.hint}>Yükleniyor…</Text>
+        </View>
+      </ScreenGradient>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>⚠ {error}</Text>
-        <TouchableOpacity style={styles.retryBtn} onPress={() => load()}>
-          <Text style={styles.retryText}>Tekrar Dene</Text>
-        </TouchableOpacity>
-      </View>
+      <ScreenGradient>
+        <View style={styles.center}>
+          <Text style={styles.errorText}>⚠ {error}</Text>
+          <TouchableOpacity style={styles.retryBtn} onPress={() => load()}>
+            <Text style={styles.retryText}>Tekrar Dene</Text>
+          </TouchableOpacity>
+        </View>
+      </ScreenGradient>
     );
   }
 
+  // SearchBar her zaman üstte sabit; FlatList sadece liste içeriğini yönetir.
   return (
-    <View style={styles.container}>
+    <ScreenGradient>
+      <SearchBar value={query} onChangeText={setQuery} />
+
       <FlatList
-        data={todos}
+        data={filteredTodos}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TodoItem
             todo={item}
             busy={busyIds.has(item.id)}
+            onDetail={(t) => navigation.navigate('TaskDetail', { todo: t })}
             onEdit={(t) => navigation.navigate('TodoForm', { mode: 'edit', todo: t })}
             onToggle={handleToggle}
             onDelete={handleDeletePress}
           />
         )}
-        contentContainerStyle={todos.length === 0 ? styles.emptyContainer : styles.list}
-        ListEmptyComponent={<Text style={styles.emptyText}>Henüz görev yok.</Text>}
+        contentContainerStyle={filteredTodos.length === 0 ? styles.emptyContainer : styles.list}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>
+            {todos.length === 0 ? 'Henüz görev yok.' : `"${query.trim()}" için sonuç bulunamadı.`}
+          </Text>
+        }
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => load(true)}
+            tintColor={colors.textOnDark}
+          />
         }
       />
 
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('TodoForm', { mode: 'create' })}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.fabIcon}>+</Text>
-      </TouchableOpacity>
-    </View>
+      <FloatingActionButton onPress={() => navigation.navigate('TodoForm', { mode: 'create' })} />
+    </ScreenGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  // ── State: loading / error ──────────────────────────────────────────────────
   center: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    gap: spacing.md,
   },
   hint: {
-    color: '#666',
+    color: colors.textOnDarkSecondary,
+    fontSize: fontSize.body,
   },
   errorText: {
-    color: '#c0392b',
-    fontSize: 16,
+    color: colors.delete,
+    fontSize: fontSize.body,
     textAlign: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: spacing['2xl'],
   },
   retryBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: '#c0392b',
+    borderColor: colors.delete,
   },
   retryText: {
-    color: '#c0392b',
+    color: colors.delete,
+    fontSize: fontSize.body,
   },
+
+  // ── List ────────────────────────────────────────────────────────────────────
   list: {
-    padding: 16,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
     paddingBottom: 80,
   },
   emptyContainer: {
@@ -222,73 +290,62 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emptyText: {
-    color: '#999',
-    fontSize: 16,
+    color: colors.textOnDarkSecondary,
+    fontSize: fontSize.body,
+    textAlign: 'center',
+    paddingHorizontal: spacing.lg,
   },
-  item: {
+
+  // ── TaskCard ────────────────────────────────────────────────────────────────
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#eee',
+    backgroundColor: colors.surfaceCard,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.sm + 2,
+    ...shadows.card,
   },
-  itemBusy: {
+  cardBusy: {
     opacity: 0.5,
   },
-  itemCheckbox: {
-    paddingHorizontal: 6,
-    paddingVertical: 4,
+
+  // Checkbox zone
+  checkboxZone: {
+    paddingRight: spacing.sm,
+    paddingVertical: spacing.xs,
   },
-  checkboxIcon: {
-    fontSize: 22,
-    color: '#2563eb',
-  },
-  itemBody: {
+
+  // Body (title + meta) — tıklanınca TaskDetail
+  cardBody: {
     flex: 1,
-    paddingHorizontal: 8,
+    paddingHorizontal: spacing.sm,
   },
-  itemTitle: {
-    fontSize: 15,
-    color: '#222',
-    marginBottom: 3,
+  cardTitle: {
+    fontSize: fontSize.taskTitleCard,
+    fontWeight: '600',
+    color: colors.textOnCard,
+    marginBottom: spacing.xs,
   },
-  completed: {
+  cardTitleCompleted: {
     textDecorationLine: 'line-through',
-    color: '#aaa',
+    color: colors.textOnCardMeta,
+    fontWeight: '400',
   },
-  itemDate: {
-    fontSize: 12,
-    color: '#bbb',
+  cardMeta: {
+    fontSize: fontSize.metaCard,
+    color: colors.textOnCardMeta,
   },
-  itemAction: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    minWidth: 36,
+
+  // Action zone: edit + delete
+  actionZone: {
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingLeft: spacing.sm,
+    gap: spacing.md,
   },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#2563eb',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  fabIcon: {
-    fontSize: 28,
-    color: '#fff',
-    lineHeight: 32,
+  deleteIcon: {
+    // Ek stil gerektirmez; gap actionZone'dan geliyor
   },
 });

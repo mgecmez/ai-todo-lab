@@ -1,5 +1,5 @@
 /**
- * NAV-006 — Navigation Sonrası E2E Testleri
+ * DESIGN-011 — UI Redesign & TaskDetail Akışı E2E Testleri
  *
  * Ön koşullar:
  *   - Backend çalışıyor: http://localhost:5100
@@ -9,18 +9,23 @@
  *   npm run test:e2e
  *
  * Kapsanan senaryolar:
- *   1) FAB navigation — liste → form ekranına geçiş
- *   2) Create flow    — form doldur → kaydet → listede yeni todo görün
- *   3) Edit flow      — todo'ya tıkla → önceden dolu form → güncelle → listede güncelleme
- *   4) Toggle flow    — ☐ → ☑
- *   5) Delete flow    — API workaround (Alert.alert web'de no-op)
- *   6) Validation     — boş başlık → hata mesajı
+ *   1) Liste ekranı yeni tasarım      — search bar, FAB, todo kartı görünür
+ *   2) SearchBar filtreleme           — daraltma, bulunamadı mesajı, temizleme
+ *   3) Kart body → TaskDetail         — başlık ve aksiyon butonları görünür
+ *   4) TaskDetail toggle              — "Tamamla" → "Geri Al", durum etiketi güncellenir
+ *   5) TaskDetail Düzenle akışı       — form açılır, güncellenir, listede yansır
+ *   6) FAB → Yeni görev formu        — form elemanları görünür
+ *   7) Create flow                    — form doldur → kaydet → listede görün
+ *   8) Delete flow                    — API workaround (Alert.alert web'de no-op)
+ *   9) Form validation                — boş başlık → hata mesajı
  *
- * Bilinen RN Web kısıtlaması:
- *   react-native-web 0.21'de Alert.alert() → static alert() {} (no-op)
- *   Silme onay dialog'u web'de açılmaz.
- *   Silme adımı doğrudan API çağrısı ile yapılır; ardından sayfa yenilenerek
- *   listenin güncellendiği doğrulanır.
+ * Bilinen RN Web kısıtlamaları:
+ *   - Alert.alert() react-native-web 0.21'de static no-op; silme onayı web'de açılmaz.
+ *     Silme adımı doğrudan API çağrısı ile test edilir.
+ *   - Toggle checkbox ikonu Ionicons SVG'dir; metin seçici ile hedeflenemez.
+ *     Toggle, TaskDetail ekranındaki "Tamamla" / "Geri Al" buton etiketi ile test edilir.
+ *   - Kart içi kalem (pencil) ikonu için erişilebilir etiket yok; doğrudan edit testi
+ *     TaskDetail → Düzenle akışı ile kapsamlıdır.
  */
 
 import { expect, test } from '@playwright/test';
@@ -58,22 +63,166 @@ async function deleteTodoViaApi(page: import('@playwright/test').Page, id: strin
 
 // ─── Test suite ───────────────────────────────────────────────────────────
 
-test.describe('Navigation Akışları', () => {
+test.describe('DESIGN-011: Yeni UI & TaskDetail Akışları', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await expect(page.getByText('Görevlerim')).toBeVisible({ timeout: 15_000 });
   });
 
   /**
-   * SENARYO 1 — FAB navigation: liste ekranından form ekranına geçiş
+   * SENARYO 1 — Liste ekranı yeni tasarımla açılır
+   * Search bar, FAB ve todo kartı DOM'da görünür olmalı.
    */
-  test('FAB tıklama form ekranına yönlendirir', async ({ page }) => {
-    await page.getByText('+').click();
+  test('liste ekranı search bar, FAB ve todo kartları gösterir', async ({ page }) => {
+    const title = `Liste Test ${Date.now()}`;
+    const created = await createTodoViaApi(page, title, 'Açıklama metni');
 
-    // Header başlığı "Yeni Görev" olmalı
+    await page.reload();
+    await expect(page.getByText('Görevlerim')).toBeVisible({ timeout: 15_000 });
+
+    // SearchBar
+    await expect(page.getByPlaceholder('Görev ara...')).toBeVisible();
+
+    // Floating Action Button (accessibilityLabel → aria-label)
+    await expect(page.getByRole('button', { name: 'Yeni görev ekle' })).toBeVisible();
+
+    // Todo kartı
+    await expect(page.getByText(title)).toBeVisible({ timeout: 8_000 });
+
+    // Temizlik
+    await deleteTodoViaApi(page, created.id);
+  });
+
+  /**
+   * SENARYO 2 — SearchBar client-side filtreleme
+   * Eşleşen sonuç gösterilir → bulunamadı mesajı → temizleme.
+   */
+  test('search bar todo listesini filtreler', async ({ page }) => {
+    const title = `Aranacak ${Date.now()}`;
+    const created = await createTodoViaApi(page, title);
+
+    await page.reload();
+    await expect(page.getByText(title)).toBeVisible({ timeout: 10_000 });
+
+    const searchBar = page.getByPlaceholder('Görev ara...');
+
+    // Eşleşen terim → todo görünür
+    await searchBar.fill('Aranacak');
+    await expect(page.getByText(title)).toBeVisible({ timeout: 4_000 });
+
+    // Eşleşmeyen terim → bulunamadı mesajı
+    await searchBar.fill('BULUNAMAYACAK_XYZ_999');
+    await expect(page.getByText(/için sonuç bulunamadı/)).toBeVisible({ timeout: 4_000 });
+
+    // SearchBar temizle → todo tekrar görünür
+    await searchBar.clear();
+    await expect(page.getByText(title)).toBeVisible({ timeout: 4_000 });
+
+    // Temizlik
+    await deleteTodoViaApi(page, created.id);
+  });
+
+  /**
+   * SENARYO 3 — Kart body tıklaması TaskDetail ekranını açar
+   * Başlık, durum bilgisi ve üç aksiyon butonu görünür.
+   */
+  test('kart body tıklaması TaskDetail ekranını açar', async ({ page }) => {
+    const title = `Detail Test ${Date.now()}`;
+    const created = await createTodoViaApi(page, title, 'Detail açıklaması');
+
+    await page.reload();
+    await expect(page.getByText(title)).toBeVisible({ timeout: 10_000 });
+
+    // Kart body → TaskDetail
+    await page.getByText(title).first().click();
+
+    // TaskDetail'e özgü elemanlar görünür olmalı (başlık metni liste kartında da bulunduğundan
+    // durum etiketi ve aksiyon butonlarıyla doğrulama yapılır)
+    await expect(page.getByText('Devam ediyor')).toBeVisible({ timeout: 6_000 });
+
+    // Üç aksiyon butonu
+    await expect(page.getByText('Düzenle')).toBeVisible();
+    await expect(page.getByText('Tamamla')).toBeVisible();
+    await expect(page.getByText('Sil')).toBeVisible();
+
+    // Temizlik
+    await deleteTodoViaApi(page, created.id);
+  });
+
+  /**
+   * SENARYO 4 — TaskDetail içinden toggle
+   * "Tamamla" tıklandıktan sonra "Geri Al" ve "Tamamlandı" görünür.
+   */
+  test('TaskDetail toggle tamamlandı durumunu değiştirir', async ({ page }) => {
+    const title = `Toggle Detail ${Date.now()}`;
+    const created = await createTodoViaApi(page, title);
+
+    await page.reload();
+    await expect(page.getByText(title)).toBeVisible({ timeout: 10_000 });
+    await page.getByText(title).first().click();
+
+    await expect(page.getByText('Tamamla')).toBeVisible({ timeout: 6_000 });
+    await expect(page.getByText('Devam ediyor')).toBeVisible();
+
+    // Toggle: tamamla
+    await page.getByText('Tamamla').click();
+
+    // Buton etiketi ve durum metni değişmeli
+    await expect(page.getByText('Geri Al')).toBeVisible({ timeout: 6_000 });
+    await expect(page.getByText('Tamamlandı')).toBeVisible();
+
+    // Temizlik
+    await deleteTodoViaApi(page, created.id);
+  });
+
+  /**
+   * SENARYO 5 — TaskDetail Düzenle akışı
+   * Detail → form → güncelle → liste (TaskDetail kendini pop'lar; liste yenilenir).
+   */
+  test('TaskDetail Düzenle butonu formu açar ve güncelleme listeye yansır', async ({ page }) => {
+    const originalTitle = `Detail Edit ${Date.now()}`;
+    const updatedTitle = `Güncellendi Detail ${Date.now()}`;
+    const created = await createTodoViaApi(page, originalTitle);
+
+    await page.reload();
+    await expect(page.getByText(originalTitle)).toBeVisible({ timeout: 10_000 });
+
+    // TaskDetail aç
+    await page.getByText(originalTitle).first().click();
+    await expect(page.getByText('Düzenle')).toBeVisible({ timeout: 6_000 });
+
+    // Düzenle butonuna tıkla
+    await page.getByText('Düzenle').click();
+
+    // Edit form açılır
+    await expect(page.getByText('Görevi Düzenle')).toBeVisible({ timeout: 6_000 });
+    await expect(page.getByPlaceholder('Görev başlığı')).toHaveValue(originalTitle);
+
+    // Başlığı güncelle
+    await page.getByPlaceholder('Görev başlığı').clear();
+    await page.getByPlaceholder('Görev başlığı').fill(updatedTitle);
+    await page.getByText('Güncelle').click();
+
+    // TaskDetail otomatik pop → listeye dönülür ve yenilenir
+    await expect(page.getByText('Görevlerim')).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByText(updatedTitle)).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByText(originalTitle)).not.toBeVisible();
+
+    // Temizlik
+    await deleteTodoViaApi(page, created.id);
+  });
+
+  /**
+   * SENARYO 6 — FAB navigation
+   * FAB'a tıklayınca yeni görev formu açılır.
+   */
+  test('FAB tıklama yeni görev formunu açar', async ({ page }) => {
+    await page.getByRole('button', { name: 'Yeni görev ekle' }).click();
+
+    // Header başlığı
     await expect(page.getByText('Yeni Görev')).toBeVisible({ timeout: 6_000 });
 
-    // Form elemanları görünmeli
+    // Form elemanları
     await expect(page.getByPlaceholder('Görev başlığı')).toBeVisible();
     await expect(page.getByPlaceholder('İsteğe bağlı açıklama')).toBeVisible();
     await expect(page.getByText('Kaydet')).toBeVisible();
@@ -81,12 +230,13 @@ test.describe('Navigation Akışları', () => {
   });
 
   /**
-   * SENARYO 2 — Create flow: form doldur → kaydet → listede görün
+   * SENARYO 7 — Create flow
+   * Form doldur → kaydet → listede yeni todo görünür.
    */
   test('yeni todo oluşturulur ve listede görünür', async ({ page }) => {
     const title = `Yeni Görev ${Date.now()}`;
 
-    await page.getByText('+').click();
+    await page.getByRole('button', { name: 'Yeni görev ekle' }).click();
     await expect(page.getByText('Yeni Görev')).toBeVisible({ timeout: 6_000 });
 
     await page.getByPlaceholder('Görev başlığı').fill(title);
@@ -110,71 +260,11 @@ test.describe('Navigation Akışları', () => {
   });
 
   /**
-   * SENARYO 3 — Edit flow: todo başlığına tıkla → önceden dolu form → güncelle → listede güncelleme
-   */
-  test('todo düzenlenir ve listede güncellenir', async ({ page }) => {
-    const originalTitle = `Düzenlenecek ${Date.now()}`;
-    const updatedTitle = `Güncellendi ${Date.now()}`;
-
-    // API ile todo oluştur
-    const created = await createTodoViaApi(page, originalTitle);
-
-    // Sayfayı yenile → liste güncellenir
-    await page.reload();
-    await expect(page.getByText('Görevlerim')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText(originalTitle)).toBeVisible({ timeout: 8_000 });
-
-    // Todo başlığına tıkla → form ekranı açılmalı
-    await page.getByText(originalTitle).first().click();
-
-    // Header başlığı "Görevi Düzenle" olmalı
-    await expect(page.getByText('Görevi Düzenle')).toBeVisible({ timeout: 6_000 });
-
-    // Başlık alanı önceden dolu olmalı
-    await expect(page.getByPlaceholder('Görev başlığı')).toHaveValue(originalTitle);
-
-    // Başlığı güncelle ve kaydet
-    await page.getByPlaceholder('Görev başlığı').clear();
-    await page.getByPlaceholder('Görev başlığı').fill(updatedTitle);
-    await page.getByText('Güncelle').click();
-
-    // Liste ekranına dönmeli ve güncellenmiş başlık görünmeli
-    await expect(page.getByText('Görevlerim')).toBeVisible({ timeout: 8_000 });
-    await expect(page.getByText(updatedTitle)).toBeVisible({ timeout: 8_000 });
-    await expect(page.getByText(originalTitle)).not.toBeVisible();
-
-    // Temizlik
-    await deleteTodoViaApi(page, created.id);
-  });
-
-  /**
-   * SENARYO 4 — Toggle flow: ☐ → ☑
-   */
-  test('todo toggle edilir (☐ → ☑)', async ({ page }) => {
-    const title = `Toggle Görev ${Date.now()}`;
-    const created = await createTodoViaApi(page, title);
-
-    await page.reload();
-    await expect(page.getByText('Görevlerim')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText(title)).toBeVisible({ timeout: 8_000 });
-
-    // İlk ☐ ikonu bize ait todo (en üstte)
-    await page.getByText('☐').first().click();
-
-    // ☑ görünmeli
-    await expect(page.getByText('☑').first()).toBeVisible({ timeout: 6_000 });
-    // Başlık hâlâ görünür (üstü çizili)
-    await expect(page.getByText(title)).toBeVisible();
-
-    // Temizlik
-    await deleteTodoViaApi(page, created.id);
-  });
-
-  /**
-   * SENARYO 5 — Delete flow (API workaround)
+   * SENARYO 8 — Delete flow (API workaround)
    *
    * Alert.alert() react-native-web 0.21'de no-op olduğundan trash butonu
-   * onayı dialog açmaz. Silme doğrudan API üzerinden test edilir.
+   * onay dialogu web'de açılmaz. Silme doğrudan API üzerinden test edilir;
+   * ardından sayfa yenilenerek listenin güncellendiği doğrulanır.
    */
   test('todo silinir ve listede kaybolur', async ({ page }) => {
     const title = `Silinecek Görev ${Date.now()}`;
@@ -184,29 +274,30 @@ test.describe('Navigation Akışları', () => {
     await expect(page.getByText('Görevlerim')).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText(title)).toBeVisible({ timeout: 8_000 });
 
-    // API ile sil
+    // API ile sil (Alert.alert web workaround)
     await deleteTodoViaApi(page, created.id);
 
-    // Sayfayı yenile → todo kaybolmalı
+    // Sayfa yenile → todo kaybolmalı
     await page.reload();
     await expect(page.getByText('Görevlerim')).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText(title)).not.toBeVisible({ timeout: 6_000 });
   });
 
   /**
-   * SENARYO 6 — Form validation: boş başlık → hata mesajı
+   * SENARYO 9 — Form validation
+   * Boş başlıkla kaydet → client-side hata mesajı, form ekranında kalır.
    */
   test('geçersiz başlıkla kayıt denemesi hata gösterir', async ({ page }) => {
-    await page.getByText('+').click();
+    await page.getByRole('button', { name: 'Yeni görev ekle' }).click();
     await expect(page.getByText('Yeni Görev')).toBeVisible({ timeout: 6_000 });
 
     // Başlık boş bırak ve kaydet
     await page.getByText('Kaydet').click();
 
-    // Client-side validasyon mesajı görünmeli
+    // Client-side validasyon mesajı
     await expect(page.getByText('Başlık alanı zorunludur.')).toBeVisible();
 
-    // Form ekranında kalmaya devam etmeli (navigasyon olmaz)
+    // Form ekranında kalmaya devam etmeli
     await expect(page.getByPlaceholder('Görev başlığı')).toBeVisible();
   });
 });

@@ -1,6 +1,8 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import TaskDetailScreen from '../screens/TaskDetailScreen';
 import TodoFormScreen from '../screens/TodoFormScreen';
 import TodoListScreen from '../screens/TodoListScreen';
+import { colors, fontSize } from '../theme/tokens';
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -14,17 +16,22 @@ export default function RootNavigator() {
     <Stack.Navigator
       initialRouteName="TodoList"
       screenOptions={{
-        // Header arka planı ve içerik arka planı beyaz — tutarlı zemin
-        headerStyle: { backgroundColor: '#fff' },
-        contentStyle: { backgroundColor: '#fff' },
-        // Başlık: koyu, kalın, tüm ekranlarda aynı boyut
-        headerTitleStyle: { fontWeight: 'bold', fontSize: 18, color: '#222' },
-        // Geri oku: mavi — FAB ve checkbox rengiyle tutarlı
-        headerTintColor: '#2563eb',
+        // Header arka planı gradient ekranlarla uyumlu koyu navy
+        headerStyle: { backgroundColor: colors.gradientBottom },
+        // Ekran içeriği koyu navy — gradient başlayana kadar beyaz flash'ı önler
+        contentStyle: { backgroundColor: colors.gradientBottom },
+        // Başlık: beyaz, token'dan gelen boyut
+        headerTitleStyle: {
+          fontWeight: '600',
+          fontSize: fontSize.navHeader,
+          color: colors.textOnDark,
+        },
+        // Geri oku ve diğer header ikonları: beyaz
+        headerTintColor: colors.textOnDark,
         // iOS: geri butonu sadece ikon gösterir, önceki ekranın başlığını gizler
         headerBackButtonDisplayMode: 'minimal',
-        // Header altında ince gölge / ayraç
-        headerShadowVisible: true,
+        // Header altında ayraç — koyu arka planda görünmez, temiz bir görünüm sağlar
+        headerShadowVisible: false,
       }}
     >
       <Stack.Screen
@@ -38,6 +45,12 @@ export default function RootNavigator() {
         // Gerçek başlık TodoFormScreen içinde navigation.setOptions() ile set ediliyor.
         // Burası ilk render öncesi fallback değer.
         options={{ title: 'Yeni Görev' }}
+      />
+      <Stack.Screen
+        name="TaskDetail"
+        component={TaskDetailScreen}
+        // Gerçek başlık DESIGN-010'da navigation.setOptions() ile set edilecek.
+        options={{ title: 'Task Details' }}
       />
     </Stack.Navigator>
   );
