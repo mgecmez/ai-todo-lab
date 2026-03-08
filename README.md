@@ -1,163 +1,178 @@
 # AI Todo Lab
 
-A full-stack Todo application built with **.NET Web API** and **React Native (Expo)**, developed using an **AI-driven multi-agent workflow**.
+Modern, cross-platform bir Todo uygulaması.
+React Native (Expo) ile geliştirilmiş mobil arayüz ve .NET tabanlı backend API içerir.
 
-This project explores how different AI roles (Product Manager, Architect, Frontend, Backend, Tester) can collaborate to design and implement a real mobile application.
-
----
-
-# ✨ Features
-
-### Mobile App
-- Todo list
-- Create new todo
-- Edit todo
-- Toggle completion
-- Delete todo
-- Navigation between screens
-- Error and loading states
-
-### Backend API
-- RESTful Todo API
-- Health endpoint
-- Validation with ProblemDetails
-- Integration tests
-
-### Testing
-- Backend integration tests (xUnit)
-- End-to-end tests (Playwright)
+Bu proje, **AI agent destekli bir geliştirme süreci** ile oluşturulmuş bir referans uygulamadır. Amaç hem modern mobil mimariyi hem de agent-driven development yaklaşımını göstermek.
 
 ---
 
-# 🏗 Architecture
+## ✨ Özellikler
 
+- 📱 Cross-platform mobil uygulama (iOS & Android)
+- 🎨 Modern gradient tabanlı UI
+- 🔎 Gerçek zamanlı görev arama
+- ✅ Görev tamamlama / geri alma
+- ✏️ Görev düzenleme
+- 🗑 Görev silme
+- 📄 Görev detay ekranı
+- ⚡ Optimistic UI updates
+- 🧪 End-to-end testler (Playwright)
 
-Mobile (React Native / Expo)
-↓
-HTTP API
-↓
-Backend (.NET Web API)
+---
 
+## 🖼 Screenshots
 
-Project structure:
+### Android
 
+| Task List                                   | Task Detail                                   | Edit Task                                   |
+| ------------------------------------------- | --------------------------------------------- | ------------------------------------------- |
+| ![](docs/screenshots/android-task-list.png) | ![](docs/screenshots/android-task-detail.png) | ![](docs/screenshots/android-task-edit.png) |
 
+### iOS
+
+| Task List                               | Task Detail                               | Edit Task                               |
+| --------------------------------------- | ----------------------------------------- | --------------------------------------- |
+| ![](docs/screenshots/ios-task-list.png) | ![](docs/screenshots/ios-task-detail.png) | ![](docs/screenshots/ios-task-edit.png) |
+
+---
+
+## 🧱 Proje Mimarisi
+
+```
 ai-todo-lab
 │
 ├─ backend
-│ ├─ TodoApp.Api
-│ ├─ TodoApp.Api.Tests
-│ └─ TodoApp.slnx
+│   └─ TodoApp.Api
+│       ├─ Controllers
+│       ├─ Services
+│       └─ Models
 │
 ├─ mobile
-│ └─ Expo React Native application
+│   ├─ src
+│   │   ├─ components
+│   │   ├─ navigation
+│   │   ├─ screens
+│   │   └─ theme
+│   │
+│   └─ tests
+│       └─ e2e
 │
-├─ docs
-│ └─ Architecture documentation
-│
-├─ tasks
-│ └─ AI generated tickets
-│
-└─ README.md
-
+└─ docs
+    └─ screenshots
+```
 
 ---
 
-# 🤖 AI Agent Workflow
+## ⚙️ Backend Kurulumu (.NET)
 
-Development was coordinated using an AI multi-agent structure:
+Backend API'yi çalıştırmak için:
 
-- **Product Manager** → Defines features and user stories
-- **Team Lead** → Breaks work into tasks
-- **Architect** → Designs system architecture
-- **Backend Developer** → Implements API
-- **Frontend Developer** → Builds mobile UI
-- **Tester / QA** → Writes automated tests
+```bash
+cd backend/TodoApp.Api
+dotnet run --urls "http://localhost:5100"
+```
 
-This approach simulates a real engineering team collaborating on a project.
+API şu adreste çalışır:
+
+```
+http://localhost:5100
+```
 
 ---
 
-# ⚙️ Tech Stack
+## 📱 Mobile Kurulumu (Expo)
+
+```bash
+cd mobile
+npm install
+npx expo start
+```
+
+Android emulator için:
+
+```
+press a
+```
+
+iOS simulator için:
+
+```
+press i
+```
+
+---
+
+## 🧪 E2E Testleri
+
+Playwright ile uçtan uca testler:
+
+```bash
+npm run test:e2e
+```
+
+Test kapsamı:
+
+- liste görüntüleme
+- görev oluşturma
+- görev düzenleme
+- görev silme
+- görev tamamlama
+- arama filtreleme
+- detail ekranı
+
+---
+
+## 🎨 UI Tasarım
+
+Uygulama tasarımı aşağıdaki prensiplere göre geliştirildi:
+
+- gradient tabanlı arka plan
+- token tabanlı design system
+- reusable component mimarisi
+- platform uyumlu shadow ve spacing
+
+Kullanılan ana UI teknolojileri:
+
+- React Native
+- Expo
+- Ionicons
+- Expo Linear Gradient
+
+---
+
+## 🚀 Gelecek Geliştirmeler
+
+Planlanan özellikler:
+
+- 📌 görev sabitleme (pin)
+- ⏰ hatırlatıcılar
+- 🏷 etiketleme sistemi
+- 🔔 push notification
+- 💾 kalıcı veri (SQLite)
+- 📊 görev istatistikleri
+
+---
+
+## 🧑‍💻 Teknolojiler
 
 Backend
 
-- .NET 8 Web API
-- xUnit
-- ASP.NET Integration Testing
+- .NET
+- ASP.NET Web API
 
 Mobile
 
 - React Native
 - Expo
-- React Navigation
 - TypeScript
 
 Testing
 
-- Playwright (E2E)
+- Playwright
 
 ---
 
-# 🚀 Getting Started
+## 📄 Lisans
 
-## Backend
-
-
-cd backend/TodoApp.Api
-dotnet run --urls http://localhost:5100
-
-
-API will run at:
-
-
-http://localhost:5100
-
-
----
-
-## Mobile
-
-
-cd mobile
-npx expo start
-
-
-Run on Android emulator:
-
-
-npx expo start --android
-
-
----
-
-# 🧪 Running Tests
-
-Backend tests:
-
-
-dotnet test
-
-
-Mobile E2E tests:
-
-
-npm run test:e2e
-
-
----
-
-# 📱 Future Roadmap
-
-- Persistent database (EF Core + SQLite)
-- Authentication
-- Improved UI design
-- Push notifications
-- Cloud deployment
-- App Store / Play Store release
-
----
-
-# 📜 License
-
-MIT License
+MIT
