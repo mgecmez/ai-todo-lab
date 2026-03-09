@@ -10,4 +10,10 @@ public interface ITodoRepository
     Todo? Update(Guid id, Todo updated);
     bool Delete(Guid id);
     Todo? ToggleComplete(Guid id);
+
+    /// <summary>
+    /// Todo'nun IsPinned değerini tersine çevirir ve UpdatedAt'ı günceller.
+    /// Todo bulunamazsa null döner.
+    /// </summary>
+    Todo? TogglePin(Guid id);
 }

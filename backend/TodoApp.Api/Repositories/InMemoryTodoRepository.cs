@@ -79,4 +79,8 @@ public class InMemoryTodoRepository : ITodoRepository
             return todo;
         }
     }
+
+    // Stub — InMemoryTodoRepository aktif olarak kullanılmıyor (EfTodoRepository geçerli).
+    // Gerçek implementasyon TM-005'te EfTodoRepository üzerinde yapılacak.
+    public Todo? TogglePin(Guid id) => throw new NotImplementedException();
 }

@@ -12,10 +12,9 @@ public class TodosController(ITodoRepository repository) : ControllerBase
     [HttpGet]
     public ActionResult<IEnumerable<Todo>> GetAll()
     {
-        var todos = repository.GetAll()
-            .OrderByDescending(t => t.CreatedAt);
-
-        return Ok(todos);
+        // Sıralama EfTodoRepository.GetAll() içinde yapılıyor (TM-005).
+        // Buradaki eski .OrderByDescending(t => t.CreatedAt) kaldırıldı.
+        return Ok(repository.GetAll());
     }
 
     [HttpPost]
@@ -23,8 +22,12 @@ public class TodosController(ITodoRepository repository) : ControllerBase
     {
         var todo = new Todo
         {
-            Title = request.Title.Trim(),
+            Title       = request.Title.Trim(),
             Description = request.Description?.Trim(),
+            Priority    = (TodoPriority)(request.Priority ?? (int)TodoPriority.Normal),
+            DueDate     = request.DueDate,
+            Tags        = request.Tags?.Trim(),
+            // IsPinned: oluşturma anında her zaman false; PATCH /pin ile değiştirilir.
         };
 
         var created = repository.Add(todo);
@@ -46,9 +49,13 @@ public class TodosController(ITodoRepository repository) : ControllerBase
     {
         var updated = new Todo
         {
-            Title = request.Title.Trim(),
+            Title       = request.Title.Trim(),
             Description = request.Description?.Trim(),
             IsCompleted = request.IsCompleted,
+            Priority    = (TodoPriority)request.Priority,
+            DueDate     = request.DueDate,
+            IsPinned    = request.IsPinned,
+            Tags        = request.Tags?.Trim(),
         };
 
         var result = repository.Update(id, updated);
@@ -70,6 +77,15 @@ public class TodosController(ITodoRepository repository) : ControllerBase
     public ActionResult<Todo> Toggle(Guid id)
     {
         var result = repository.ToggleComplete(id);
+        if (result is null) return NotFound();
+
+        return Ok(result);
+    }
+
+    [HttpPatch("{id:guid}/pin")]
+    public ActionResult<Todo> Pin(Guid id)
+    {
+        var result = repository.TogglePin(id);
         if (result is null) return NotFound();
 
         return Ok(result);

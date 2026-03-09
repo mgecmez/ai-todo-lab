@@ -31,6 +31,24 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(t => t.Description)
                   .HasMaxLength(1000);
 
+            // Priority: zorunlu; veritabanında integer olarak saklanır (EF Core convention).
+            // Varsayılan değer Normal (1) — migration'da mevcut satırlar bu değeri alır.
+            entity.Property(t => t.Priority)
+                  .IsRequired()
+                  .HasDefaultValue(TodoPriority.Normal);
+
+            // DueDate: isteğe bağlı (nullable); ek konfigürasyon gerekmez.
+            entity.Property(t => t.DueDate);
+
+            // IsPinned: zorunlu; varsayılan false — migration'da mevcut satırlar false alır.
+            entity.Property(t => t.IsPinned)
+                  .IsRequired()
+                  .HasDefaultValue(false);
+
+            // Tags: isteğe bağlı (nullable), maksimum 500 karakter (virgülle ayrılmış etiketler).
+            entity.Property(t => t.Tags)
+                  .HasMaxLength(500);
+
             // CreatedAt ve UpdatedAt: zorunlu
             // Değer ataması repository sorumluluğundadır (DateTime.UtcNow).
             entity.Property(t => t.CreatedAt)

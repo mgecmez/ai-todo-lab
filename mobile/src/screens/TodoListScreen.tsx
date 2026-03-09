@@ -15,33 +15,49 @@ import FloatingActionButton from '../components/FloatingActionButton';
 import ScreenGradient from '../components/ScreenGradient';
 import SearchBar from '../components/SearchBar';
 import type { TodoListScreenProps } from '../navigation/types';
-import { deleteTodo, getTodos, toggleTodo } from '../services/api/todosApi';
-import { friendlyErrorMessage, getCachedTodos, setCachedTodos } from '../services/cache/todosCacheService';
 import { colors, fontSize, radius, shadows, spacing } from '../theme/tokens';
-import type { Todo } from '../types/todo';
+import { PRIORITY_META, type Todo } from '../types/todo';
+import { useTodos } from '../hooks/useTodos';
+import { useDeleteTodo } from '../mutations/useDeleteTodo';
+import { useToggleTodo } from '../mutations/useToggleTodo';
+import { usePinTodo } from '../mutations/usePinTodo';
+import { friendlyErrorMessage } from '../utils/errorMessage';
+import { isLocalId } from '../utils/localId';
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+function isOverdue(dueDate: string | null, isCompleted: boolean): boolean {
+  if (!dueDate || isCompleted) return false;
+  return new Date(dueDate) < new Date();
+}
+
 interface TodoItemProps {
   todo: Todo;
   busy: boolean;
+  isPending: boolean;
   onDetail: (todo: Todo) => void;
   onEdit: (todo: Todo) => void;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
+  onPin: (id: string) => void;
 }
 
-function TodoItem({ todo, busy, onDetail, onEdit, onToggle, onDelete }: TodoItemProps) {
+function TodoItem({ todo, busy, isPending, onDetail, onEdit, onToggle, onDelete, onPin }: TodoItemProps) {
+  const priorityMeta = PRIORITY_META[todo.priority ?? 1];
+  const overdue = isOverdue(todo.dueDate, todo.isCompleted);
+  // Herhangi bir aksiyon kısıtlıysa tüm yazma butonları pasif olur.
+  const actionsDisabled = busy || isPending;
+
   return (
-    <View style={[styles.card, busy && styles.cardBusy]}>
+    <View style={[styles.card, todo.isPinned && styles.cardPinned, busy && styles.cardBusy]}>
       {/* ── Toggle (checkbox) ─────────────────────────────── */}
       <TouchableOpacity
         style={styles.checkboxZone}
         onPress={() => onToggle(todo.id)}
-        disabled={busy}
+        disabled={actionsDisabled}
         activeOpacity={0.6}
       >
         <Ionicons
@@ -51,7 +67,7 @@ function TodoItem({ todo, busy, onDetail, onEdit, onToggle, onDelete }: TodoItem
         />
       </TouchableOpacity>
 
-      {/* ── Body — tıklanınca TaskDetail ──────────────────── */}
+      {/* ── Body — tıklanınca TaskDetail (pending'de de açılabilir) ── */}
       <TouchableOpacity
         style={styles.cardBody}
         onPress={() => onDetail(todo)}
@@ -64,26 +80,64 @@ function TodoItem({ todo, busy, onDetail, onEdit, onToggle, onDelete }: TodoItem
         >
           {todo.title}
         </Text>
-        <Text style={styles.cardMeta}>{formatDate(todo.createdAt)}</Text>
+
+        {/* Meta: oluşturma tarihi · son tarih (varsa) */}
+        <Text style={[styles.cardMeta, overdue && styles.cardMetaOverdue]}>
+          {formatDate(todo.createdAt)}
+          {todo.dueDate ? `  ·  Son: ${formatDate(todo.dueDate)}` : ''}
+        </Text>
+
+        {/* Priority badge */}
+        <View style={styles.badgeRow}>
+          <View style={[styles.priorityDot, { backgroundColor: priorityMeta.color }]} />
+          <Text style={[styles.priorityLabel, { color: priorityMeta.color }]}>
+            {priorityMeta.label}
+          </Text>
+        </View>
+
+        {/* Pending row — sadece sync bekleyen local item'larda gösterilir */}
+        {isPending && (
+          <View style={styles.pendingRow}>
+            <ActivityIndicator
+              size="small"
+              color={colors.textOnCardMeta}
+              style={styles.pendingSpinner}
+            />
+            <Text style={styles.pendingLabel}>Senkronize bekleniyor</Text>
+          </View>
+        )}
       </TouchableOpacity>
 
-      {/* ── Sağ taraf: busy iken spinner, değilse edit + delete ── */}
+      {/* ── Sağ taraf: busy iken spinner, değilse pin + edit + delete ── */}
       {busy ? (
         <ActivityIndicator size="small" color={colors.primary} style={styles.actionZone} />
       ) : (
-        <View style={styles.actionZone}>
+        <View style={[styles.actionZone, isPending && styles.actionZonePending]}>
+          <TouchableOpacity
+            onPress={() => onPin(todo.id)}
+            disabled={isPending}
+            activeOpacity={isPending ? 1 : 0.6}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 4 }}
+          >
+            <Ionicons
+              name={todo.isPinned ? 'pin' : 'pin-outline'}
+              size={18}
+              color={todo.isPinned ? colors.pin : colors.textOnCardMeta}
+            />
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() => onEdit(todo)}
-            activeOpacity={0.6}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 4 }}
+            disabled={isPending}
+            activeOpacity={isPending ? 1 : 0.6}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
           >
             <Ionicons name="pencil-outline" size={18} color={colors.primary} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => onDelete(todo.id)}
-            activeOpacity={0.6}
+            disabled={isPending}
+            activeOpacity={isPending ? 1 : 0.6}
             hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
-            style={styles.deleteIcon}
           >
             <Ionicons name="trash-outline" size={18} color={colors.delete} />
           </TouchableOpacity>
@@ -94,13 +148,44 @@ function TodoItem({ todo, busy, onDetail, onEdit, onToggle, onDelete }: TodoItem
 }
 
 export default function TodoListScreen({ navigation }: TodoListScreenProps) {
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
-  const [query, setQuery] = useState('');
+  // ── TanStack Query — okuma akışı ──────────────────────────────────────────
+  const { todos, isLoading, isError, error, refetch } = useTodos();
 
+  // ── Mutation hook'ları — yazma akışı (optimistic) ─────────────────────────
+  const toggleMutation = useToggleTodo();
+  const pinMutation = usePinTodo();
+  const deleteMutation = useDeleteTodo();
+
+  // ── Yerel state — arama + pull-to-refresh ────────────────────────────────
+  const [query, setQuery] = useState('');
+  // isRefetching yerine kullanıcı kaynaklı yenileme takibi.
+  // Mutation onSettled/invalidateQueries gibi arka plan refetch'leri
+  // iOS'ta RefreshControl spinner'ını (ve dolayısıyla UIScrollView inset
+  // değişimini) tetiklememeli; aksi hâlde liste scroll jump yapar.
+  const [userRefreshing, setUserRefreshing] = useState(false);
+
+  // Ekran odağa geldiğinde (edit/create'den dönüş dahil) listeyi yenile.
+  // useQuery refetchOnWindowFocus React Native'de otomatik tetiklenmez;
+  // useFocusEffect köprüsü bu boşluğu kapatır.
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
+
+  // Kullanıcı pull-to-refresh hareketi yaptığında çağrılır.
+  // userRefreshing state'i yalnızca bu yoldan true olur; mutation kaynaklı
+  // arka plan refetch'leri bu state'i etkilemez → iOS scroll jump olmaz.
+  async function handleRefresh() {
+    setUserRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setUserRefreshing(false);
+    }
+  }
+
+  // ── Arama filtresi ───────────────────────────────────────────────────────
   const trimmed = query.trim().toLowerCase();
   const filteredTodos = trimmed
     ? todos.filter(
@@ -110,83 +195,21 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
       )
     : todos;
 
-  const load = useCallback(async (isRefresh = false) => {
-    setError(null);
-
-    // 1) Cache'i oku.
-    const cached = await getCachedTodos();
-
-    if (cached !== null) {
-      // Cache varsa listeyi anında göster; spinner gerekmez.
-      setTodos(cached);
-      setLoading(false);
-    } else if (!isRefresh) {
-      // Cache yoksa ve ilk yükleme ise spinner göster.
-      setLoading(true);
-    }
-
-    if (isRefresh) setRefreshing(true);
-
-    // 2) Her durumda API'den taze veri çek.
-    try {
-      const apiTodos = await getTodos();
-      // 3) API başarılıysa listeyi güncelle ve cache'e yaz.
-      setTodos(apiTodos);
-      setCachedTodos(apiTodos);
-    } catch (e) {
-      // Cache varsa: kullanıcı zaten listeyi görüyor; sessizce devam et.
-      // Cache yoksa: hata ekranını göster.
-      if (cached === null) {
-        setError(friendlyErrorMessage(e));
-      }
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load]),
-  );
-
-  function setBusy(id: string, value: boolean) {
-    setBusyIds((prev) => {
-      const next = new Set(prev);
-      value ? next.add(id) : next.delete(id);
-      return next;
+  // ── Toggle ───────────────────────────────────────────────────────────────
+  function handleToggle(id: string) {
+    toggleMutation.mutate(id, {
+      onError: (e) => Alert.alert('Hata', friendlyErrorMessage(e)),
     });
   }
 
-  async function handleToggle(id: string) {
-    setBusy(id, true);
-
-    // Optimistic update: listeyi yeniden yüklemeden anlık olarak güncelle.
-    // load(true) çağrısı RefreshControl'ü tetikler ve iOS'ta scroll jump yaratır.
-    setTodos((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, isCompleted: !t.isCompleted } : t)),
-    );
-
-    try {
-      const updated = await toggleTodo(id);
-      // API yanıtıyla kesin state'i yerleştir ve cache'i güncelle.
-      setTodos((prev) => {
-        const next = prev.map((t) => (t.id === id ? updated : t));
-        setCachedTodos(next);
-        return next;
-      });
-    } catch (e) {
-      // Başarısız: optimistic değişikliği geri al
-      setTodos((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, isCompleted: !t.isCompleted } : t)),
-      );
-      Alert.alert('Hata', friendlyErrorMessage(e));
-    } finally {
-      setBusy(id, false);
-    }
+  // ── Pin ──────────────────────────────────────────────────────────────────
+  function handlePin(id: string) {
+    pinMutation.mutate(id, {
+      onError: (e) => Alert.alert('Hata', friendlyErrorMessage(e)),
+    });
   }
 
+  // ── Delete ───────────────────────────────────────────────────────────────
   function handleDeletePress(id: string) {
     Alert.alert(
       'Görevi Sil',
@@ -198,26 +221,14 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
     );
   }
 
-  async function handleDeleteConfirm(id: string) {
-    setBusy(id, true);
-    try {
-      await deleteTodo(id);
-      // Silinen öğeyi state'ten ve cache'ten anında kaldır.
-      // load(true) yerine doğrudan güncelleme: API zaten başarılı döndü,
-      // tüm listeyi yeniden çekmeye gerek yok.
-      setTodos((prev) => {
-        const next = prev.filter((t) => t.id !== id);
-        setCachedTodos(next);
-        return next;
-      });
-    } catch (e) {
-      Alert.alert('Hata', friendlyErrorMessage(e));
-    } finally {
-      setBusy(id, false);
-    }
+  function handleDeleteConfirm(id: string) {
+    deleteMutation.mutate(id, {
+      onError: (e) => Alert.alert('Hata', friendlyErrorMessage(e)),
+    });
   }
 
-  if (loading) {
+  // ── Yükleme durumu: cache yok, ilk fetch devam ediyor ───────────────────
+  if (isLoading) {
     return (
       <ScreenGradient>
         <View style={styles.center}>
@@ -228,12 +239,16 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
     );
   }
 
-  if (error) {
+  // ── Hata durumu: fetch başarısız VE gösterilecek veri yok ───────────────
+  // Cache'ten gelen eski veri varsa (todos.length > 0) listeyi gizleme;
+  // kullanıcı stale veriyi görmeye devam eder.
+  if (isError && todos.length === 0) {
+    const errorMessage = error instanceof Error ? error.message : 'Bir hata oluştu.';
     return (
       <ScreenGradient>
         <View style={styles.center}>
-          <Text style={styles.errorText}>⚠ {error}</Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={() => load()}>
+          <Text style={styles.errorText}>⚠ {errorMessage}</Text>
+          <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
             <Text style={styles.retryText}>Tekrar Dene</Text>
           </TouchableOpacity>
         </View>
@@ -241,7 +256,7 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
     );
   }
 
-  // SearchBar her zaman üstte sabit; FlatList sadece liste içeriğini yönetir.
+  // ── Normal liste görünümü ─────────────────────────────────────────────────
   return (
     <ScreenGradient>
       <SearchBar value={query} onChangeText={setQuery} />
@@ -252,11 +267,17 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
         renderItem={({ item }) => (
           <TodoItem
             todo={item}
-            busy={busyIds.has(item.id)}
+            busy={
+              (toggleMutation.isPending && toggleMutation.variables === item.id) ||
+              (pinMutation.isPending && pinMutation.variables === item.id) ||
+              (deleteMutation.isPending && deleteMutation.variables === item.id)
+            }
+            isPending={isLocalId(item.id)}
             onDetail={(t) => navigation.navigate('TaskDetail', { todo: t })}
             onEdit={(t) => navigation.navigate('TodoForm', { mode: 'edit', todo: t })}
             onToggle={handleToggle}
             onDelete={handleDeletePress}
+            onPin={handlePin}
           />
         )}
         contentContainerStyle={filteredTodos.length === 0 ? styles.emptyContainer : styles.list}
@@ -267,8 +288,8 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
         }
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => load(true)}
+            refreshing={userRefreshing}
+            onRefresh={handleRefresh}
             tintColor={colors.textOnDark}
           />
         }
@@ -336,7 +357,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.sm + 2,
+    borderLeftWidth: 3,
+    borderLeftColor: 'transparent',
     ...shadows.card,
+  },
+  cardPinned: {
+    borderLeftColor: colors.pin,
   },
   cardBusy: {
     opacity: 0.5,
@@ -348,7 +374,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
 
-  // Body (title + meta) — tıklanınca TaskDetail
+  // Body (title + meta + badge) — tıklanınca TaskDetail
   cardBody: {
     flex: 1,
     paddingHorizontal: spacing.sm,
@@ -367,16 +393,52 @@ const styles = StyleSheet.create({
   cardMeta: {
     fontSize: fontSize.metaCard,
     color: colors.textOnCardMeta,
+    marginBottom: spacing.xs,
+  },
+  cardMetaOverdue: {
+    color: colors.delete,
   },
 
-  // Action zone: edit + delete
+  // Priority badge
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  priorityDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  priorityLabel: {
+    fontSize: fontSize.metaCard,
+    fontWeight: '500',
+  },
+
+  // Action zone: pin + edit + delete
   actionZone: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingLeft: spacing.sm,
     gap: spacing.md,
   },
-  deleteIcon: {
-    // Ek stil gerektirmez; gap actionZone'dan geliyor
+  // Pending: action ikonları grileşir, kart üzerinde sync beklendiği anlaşılır.
+  actionZonePending: {
+    opacity: 0.3,
+  },
+  // Pending satırı: spinner + "Senkronize bekleniyor" etiketi
+  pendingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  pendingSpinner: {
+    transform: [{ scale: 0.65 }],
+  },
+  pendingLabel: {
+    fontSize: fontSize.metaCard,
+    color: colors.textOnCardMeta,
+    fontStyle: 'italic',
   },
 });
