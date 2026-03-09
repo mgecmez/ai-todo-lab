@@ -17,6 +17,11 @@ Bu proje, **AI agent destekli bir geliştirme süreci** ile oluşturulmuş bir r
 - 🗑 Görev silme
 - 📄 Görev detay ekranı
 - ⚡ Optimistic UI updates
+- 📌 Görev sabitleme
+- 🏷 Etiket desteği
+- 📅 Son tarih (due date)
+- 📶 Offline-first veri mimarisi
+- 🔄 Otomatik senkronizasyon
 - 🧪 End-to-end testler (Playwright)
 
 ---
@@ -145,11 +150,9 @@ Kullanılan ana UI teknolojileri:
 
 Planlanan özellikler:
 
-- 📌 görev sabitleme (pin)
 - ⏰ hatırlatıcılar
 - 🏷 etiketleme sistemi
 - 🔔 push notification
-- 💾 kalıcı veri (SQLite)
 - 📊 görev istatistikleri
 
 ---
@@ -166,6 +169,9 @@ Mobile
 - React Native
 - Expo
 - TypeScript
+- TanStack Query
+- AsyncStorage
+- NetInfo
 
 Testing
 
