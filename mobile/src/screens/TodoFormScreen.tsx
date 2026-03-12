@@ -18,6 +18,16 @@ const PRIORITY_OPTIONS: { key: TodoPriority; label: string }[] = [
   { key: TODO_PRIORITY.Urgent, label: 'Acil'   },
 ];
 
+// Faz 1 reminder preset'leri — dakika cinsinden; null = hatırlatma yok.
+const REMINDER_OPTIONS: { key: number | null; label: string }[] = [
+  { key: null, label: 'Yok'    },
+  { key: 5,    label: '5 dk'   },
+  { key: 15,   label: '15 dk'  },
+  { key: 30,   label: '30 dk'  },
+  { key: 60,   label: '1 saat' },
+  { key: 1440, label: '1 gün'  },
+];
+
 export default function TodoFormScreen({ navigation, route }: TodoFormScreenProps) {
   const isEdit = route.params.mode === 'edit';
   const editTodo = route.params.mode === 'edit' ? route.params.todo : undefined;
@@ -39,6 +49,9 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
   const [dueDate, setDueDate] = useState<string | null>(editTodo?.dueDate ?? null);
   const [isPinned, setIsPinned] = useState(editTodo?.isPinned ?? false);
   const [tags, setTags] = useState(editTodo?.tags ?? '');
+  const [reminderOffset, setReminderOffset] = useState<number | null>(
+    editTodo?.reminderOffset ?? null,
+  );
 
   const createMutation = useCreateTodo();
   const updateMutation = useUpdateTodo();
@@ -64,15 +77,21 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
     setDueDateText(text);
     if (text.trim() === '') {
       setDueDate(null);
+      setReminderOffset(null);
       return;
     }
     const parsed = new Date(text.trim());
-    setDueDate(isNaN(parsed.getTime()) ? null : parsed.toISOString());
+    const valid = !isNaN(parsed.getTime());
+    setDueDate(valid ? parsed.toISOString() : null);
+    // Tarih geçersizleşirse mevcut reminder seçimini koru;
+    // kullanıcı yazı yazarken her keystroke'ta reminder sıfırlanmasın.
   }
 
   function handleClearDueDate() {
     setDueDateText('');
     setDueDate(null);
+    // dueDate olmadan reminder anlamsız; otomatik sıfırla.
+    setReminderOffset(null);
   }
 
   function handleSave() {
@@ -102,6 +121,8 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
             dueDate,
             isPinned,
             tags: tags.trim() || null,
+            // dueDate yoksa reminder anlamsız; null'a sıfırla.
+            reminderOffset: dueDate ? reminderOffset : null,
           },
         },
         { onSuccess, onError },
@@ -115,6 +136,8 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
           dueDate: dueDate ?? undefined,
           isPinned,
           tags: tags.trim() || undefined,
+          // dueDate yoksa reminder anlamsız; undefined (= null) ilet.
+          reminderOffset: dueDate && reminderOffset ? reminderOffset : undefined,
         },
         { onSuccess, onError },
       );
@@ -221,6 +244,35 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
           returnKeyType="done"
         />
 
+        {/* ── Reminder ── */}
+        {/* dueDate yoksa seçici görsel olarak soluklaşır ve devre dışıdır. */}
+        <Text style={[styles.fieldLabel, !dueDate && styles.fieldLabelDisabled]}>
+          Hatırlatıcı
+        </Text>
+        {!dueDate && (
+          <Text style={styles.reminderHint}>
+            Son tarih belirlenmeden hatırlatıcı eklenemez.
+          </Text>
+        )}
+        <View style={[styles.reminderGroup, !dueDate && styles.reminderGroupDisabled]}>
+          {REMINDER_OPTIONS.map((opt) => {
+            const selected = reminderOffset === opt.key;
+            return (
+              <TouchableOpacity
+                key={String(opt.key)}
+                style={[styles.reminderBtn, selected && styles.reminderBtnSelected]}
+                onPress={() => setReminderOffset(opt.key)}
+                disabled={saving || !dueDate}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.reminderBtnText, selected && styles.reminderBtnTextSelected]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
         {saveError ? (
           <Text style={styles.saveError}>⚠ {saveError}</Text>
         ) : null}
@@ -290,6 +342,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: spacing.md,
+  },
+  // ── Reminder ──
+  fieldLabelDisabled: {
+    opacity: 0.4,
+  },
+  reminderHint: {
+    fontSize: fontSize.captionError,
+    color: colors.textOnDarkSecondary,
+    marginBottom: spacing.sm,
+    fontStyle: 'italic',
+  },
+  reminderGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  reminderGroupDisabled: {
+    opacity: 0.35,
+  },
+  reminderBtn: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.textOnDarkSecondary,
+  },
+  reminderBtnSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  reminderBtnText: {
+    fontSize: fontSize.captionError,
+    color: colors.textOnDarkSecondary,
+    fontWeight: '500',
+  },
+  reminderBtnTextSelected: {
+    color: colors.textOnDark,
   },
   // ── Errors / Actions ──
   saveError: {

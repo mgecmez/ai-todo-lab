@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteTodo } from '../services/api/todosApi';
 import type { Todo } from '../types/todo';
 import { TODOS_QUERY_KEY } from '../query/queryKeys';
+import { notificationService } from '../services/notifications/notificationService';
 
 interface DeleteTodoContext {
   previous: Todo[] | undefined;
@@ -36,6 +37,13 @@ export function useDeleteTodo() {
       );
 
       return { previous };
+    },
+
+    onSuccess: (_data, id) => {
+      // Backend silmeyi onayladı; registry'deki zamanlanmış bildirimi iptal et.
+      // onMutate'te değil onSuccess'te yapılır: silme başarısız olup rollback
+      // gerçekleşirse bildirim yanlışlıkla silinmemiş olur.
+      void notificationService.cancelReminder(id);
     },
 
     onError: (_error, _id, context) => {

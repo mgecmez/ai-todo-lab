@@ -4,6 +4,7 @@ import type { CreateTodoRequest, Todo } from '../types/todo';
 import { TODO_PRIORITY } from '../types/todo';
 import { TODOS_QUERY_KEY } from '../query/queryKeys';
 import { generateLocalId } from '../utils/localId';
+import { notificationService } from '../services/notifications/notificationService';
 
 /** onMutate'in döndürdüğü ve onError/onSettled'a iletilen context tipi. */
 interface CreateTodoContext {
@@ -73,12 +74,24 @@ export function useCreateTodo() {
         tags: request.tags?.trim() || null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        reminderOffset: request.reminderOffset ?? null,
       };
 
       queryClient.setQueryData<Todo[]>(TODOS_QUERY_KEY, (old) => [tempTodo, ...(old ?? [])]);
 
       // Context olarak döndür: onError rollback + tempId için kullanılır.
       return { previous, tempId: tempTodo.id };
+    },
+
+    onSuccess: (newTodo, request) => {
+      // Backend, reminderOffset'i bilmez; server'dan dönen todo'ya
+      // form'daki reminderOffset'i ekleyerek scheduleReminder'a ilet.
+      // scheduleReminder içi: dueDate + reminderOffset yoksa veya fireAt
+      // geçmişteyse sessizce çıkar — UX hiç etkilenmez.
+      void notificationService.scheduleReminder({
+        ...newTodo,
+        reminderOffset: request.reminderOffset ?? null,
+      });
     },
 
     onError: (_error, _request, context) => {

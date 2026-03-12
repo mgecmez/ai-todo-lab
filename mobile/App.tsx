@@ -6,6 +6,7 @@ import RootNavigator from './src/navigation/RootNavigator';
 import { asyncStoragePersister } from './src/query/persister';
 import { queryClient } from './src/query/queryClient';
 import { setupNetInfoSync } from './src/query/networkSync';
+import { notificationService } from './src/services/notifications/notificationService';
 import { colors } from './src/theme/tokens';
 
 // NavigationContainer'ın varsayılan beyaz arka planını gradient ile uyumlu
@@ -19,11 +20,14 @@ const navTheme = {
 };
 
 export default function App() {
-  // NetInfo → onlineManager köprüsünü uygulama başlarken bir kez kur.
-  // setupNetInfoSync() bir dinleyici kaydeder; React'ın render döngüsü
-  // dışında olduğundan useEffect ile çalıştırmak yeterlidir.
+  // Uygulama başlarken bir kez çalışacak yan etkiler.
+  // useEffect tercih sebebi: her iki fonksiyon da React render döngüsü dışında
+  // yan etki (listener kaydı / async izin isteği) üretir.
   useEffect(() => {
+    // NetInfo → onlineManager köprüsünü kur (ağ değişimlerini TanStack'e ilet).
     setupNetInfoSync();
+    // Bildirim izni akışını başlat; izin verilmişse scheduleReminder aktif olur.
+    void notificationService.initialize();
   }, []);
 
   return (

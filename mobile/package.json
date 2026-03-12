@@ -20,6 +20,7 @@
     "@tanstack/react-query-persist-client": "^5.90.24",
     "expo": "~55.0.4",
     "expo-linear-gradient": "~55.0.8",
+    "expo-notifications": "~55.0.12",
     "expo-status-bar": "~55.0.4",
     "react": "19.2.0",
     "react-dom": "19.2.0",

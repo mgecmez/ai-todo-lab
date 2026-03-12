@@ -3,6 +3,7 @@ import { updateTodo } from '../services/api/todosApi';
 import type { Todo, UpdateTodoRequest } from '../types/todo';
 import { TODO_PRIORITY } from '../types/todo';
 import { TODOS_QUERY_KEY } from '../query/queryKeys';
+import { notificationService } from '../services/notifications/notificationService';
 
 /** useMutation değişken tipi: id + request birlikte taşınır. */
 interface UpdateTodoVariables {
@@ -70,12 +71,28 @@ export function useUpdateTodo() {
             dueDate: request.dueDate !== undefined ? request.dueDate : t.dueDate,
             isPinned: request.isPinned !== undefined ? request.isPinned : t.isPinned,
             tags: request.tags !== undefined ? (request.tags?.trim() || null) : t.tags,
+            // reminderOffset Faz 1'de yalnızca mobile'da tutulur; optimistic
+            // güncellemeye eklenmezse TaskDetail gibi okuma noktaları stale kalır.
+            reminderOffset: request.reminderOffset !== undefined
+              ? (request.reminderOffset ?? null)
+              : t.reminderOffset,
             updatedAt: new Date().toISOString(),
           };
         }),
       );
 
       return { previous };
+    },
+
+    onSuccess: (updatedTodo, { request }) => {
+      // Backend, reminderOffset'i bilmez; server'dan dönen todo'ya
+      // request'teki reminderOffset'i ekleyerek scheduleReminder'a ilet.
+      // scheduleReminder: eski bildirimi iptal edip yenisini zamanlar;
+      // reminderOffset null veya dueDate yoksa sadece iptal eder.
+      void notificationService.scheduleReminder({
+        ...updatedTodo,
+        reminderOffset: request.reminderOffset ?? null,
+      });
     },
 
     onError: (_error, _variables, context) => {

@@ -32,11 +32,14 @@ export interface Todo {
   description: string | null;
   isCompleted: boolean;
   priority: TodoPriority;
-  dueDate: string | null;   // ISO 8601; sadece gün bileşeni kullanılır
+  dueDate: string | null;         // ISO 8601; sadece gün bileşeni kullanılır
   isPinned: boolean;
-  tags: string | null;      // virgülle ayrılmış; örn. "iş,kişisel"
+  tags: string | null;            // virgülle ayrılmış; örn. "iş,kişisel"
   createdAt: string;
   updatedAt: string;
+  // Faz 1: yalnızca mobile'da saklanır; backend bu alanı bilmez.
+  // null = reminder yok; number = son tarihten kaç dakika önce hatırlatılacak.
+  reminderOffset: number | null;
 }
 
 // ── Request tipleri ───────────────────────────────────────────────────────────
@@ -44,10 +47,11 @@ export interface Todo {
 export interface CreateTodoRequest {
   title: string;
   description?: string;
-  priority?: TodoPriority;  // belirtilmezse backend Normal uygular
-  dueDate?: string;         // ISO 8601
-  isPinned?: boolean;       // belirtilmezse false
-  tags?: string;            // virgülle ayrılmış
+  priority?: TodoPriority;    // belirtilmezse backend Normal uygular
+  dueDate?: string;           // ISO 8601
+  isPinned?: boolean;         // belirtilmezse false
+  tags?: string;              // virgülle ayrılmış
+  reminderOffset?: number;    // Faz 1: backend'e gönderilmez; yalnızca notificationService kullanır
 }
 
 export interface UpdateTodoRequest {
@@ -60,4 +64,5 @@ export interface UpdateTodoRequest {
   dueDate?: string | null;
   isPinned?: boolean;
   tags?: string | null;
+  reminderOffset?: number | null; // Faz 1: backend'e gönderilmez; yalnızca notificationService kullanır
 }

@@ -58,10 +58,12 @@ export async function getTodos(): Promise<Todo[]> {
 }
 
 export async function createTodo(request: CreateTodoRequest): Promise<Todo> {
+  // reminderOffset Faz 1'de yalnızca mobile'da tutulur; backend bu alanı bilmez.
+  const { reminderOffset: _reminderOffset, ...body } = request;
   const response = await apiFetch(BASE, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(request),
+    body: JSON.stringify(body),
   });
   return parseResponse<Todo>(response);
 }
@@ -70,10 +72,12 @@ export async function updateTodo(
   id: string,
   request: UpdateTodoRequest,
 ): Promise<Todo> {
+  // reminderOffset Faz 1'de yalnızca mobile'da tutulur; backend bu alanı bilmez.
+  const { reminderOffset: _reminderOffset, ...body } = request;
   const response = await apiFetch(`${BASE}/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(request),
+    body: JSON.stringify(body),
   });
   return parseResponse<Todo>(response);
 }
