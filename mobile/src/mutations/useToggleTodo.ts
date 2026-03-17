@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toggleTodo } from '../services/api/todosApi';
 import type { Todo } from '../types/todo';
-import { TODOS_QUERY_KEY } from '../query/queryKeys';
+import { cacheKeys } from '../query/queryKeys';
+import { useAuth } from '../context/AuthContext';
 
 interface ToggleTodoContext {
   previous: Todo[] | undefined;
@@ -28,17 +29,19 @@ interface ToggleTodoContext {
  */
 export function useToggleTodo() {
   const queryClient = useQueryClient();
+  const { userId } = useAuth();
+  const queryKey = userId ? cacheKeys.todos(userId) : (['todos', '__disabled__'] as const);
 
   return useMutation<Todo, Error, string, ToggleTodoContext>({
     mutationFn: (id) => toggleTodo(id),
 
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: TODOS_QUERY_KEY });
+      await queryClient.cancelQueries({ queryKey });
 
-      const previous = queryClient.getQueryData<Todo[]>(TODOS_QUERY_KEY);
+      const previous = queryClient.getQueryData<Todo[]>(queryKey);
 
       // isCompleted değerini optimistic olarak tersine çevir.
-      queryClient.setQueryData<Todo[]>(TODOS_QUERY_KEY, (old) =>
+      queryClient.setQueryData<Todo[]>(queryKey, (old) =>
         (old ?? []).map((t) =>
           t.id === id ? { ...t, isCompleted: !t.isCompleted } : t,
         ),
@@ -50,14 +53,14 @@ export function useToggleTodo() {
     onSuccess: (updatedTodo) => {
       // Sunucudan dönen kesin veri ile sadece ilgili item'ı güncelle.
       // Tam liste yenilemesi yapılmaz; isRefetching tetiklenmez.
-      queryClient.setQueryData<Todo[]>(TODOS_QUERY_KEY, (old) =>
+      queryClient.setQueryData<Todo[]>(queryKey, (old) =>
         (old ?? []).map((t) => (t.id === updatedTodo.id ? updatedTodo : t)),
       );
     },
 
     onError: (_error, _id, context) => {
       if (context?.previous !== undefined) {
-        queryClient.setQueryData<Todo[]>(TODOS_QUERY_KEY, context.previous);
+        queryClient.setQueryData<Todo[]>(queryKey, context.previous);
       }
     },
 
@@ -65,7 +68,7 @@ export function useToggleTodo() {
       // Başarıda onSuccess kesin veriyi yazdı; ek refetch gerekmez.
       // Hata durumunda rollback yapıldı; backend ile tutarsızlık olabilir → yenile.
       if (error) {
-        queryClient.invalidateQueries({ queryKey: TODOS_QUERY_KEY });
+        queryClient.invalidateQueries({ queryKey });
       }
     },
   });

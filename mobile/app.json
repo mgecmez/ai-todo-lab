@@ -12,12 +12,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "UIBackgroundModes": ["remote-notification"]
-      }
+      "bundleIdentifier": "com.mgecmez.aitodolab",
+      "supportsTablet": true
     },
     "android": {
+      "package": "com.mgecmez.aitodolab",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -33,7 +32,8 @@
           "color": "#4A90D9",
           "sounds": []
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "web": {
       "favicon": "./assets/favicon.png"

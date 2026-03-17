@@ -10,6 +10,7 @@ public class Todo
     public DateTime? DueDate { get; set; }
     public bool IsPinned { get; set; }
     public string? Tags { get; set; }
+    public string? UserId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

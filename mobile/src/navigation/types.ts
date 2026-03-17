@@ -2,10 +2,9 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Todo } from '../types/todo';
 
 /**
- * Stack navigator parametre haritası.
- * Kaynak: docs/navigation.md ve docs/screen-list.md — Route Param Sözleşmesi
+ * Ana uygulama stack'inin parametre haritası (authenticated).
  */
-export type RootStackParamList = {
+export type AppStackParamList = {
   /** Todo listesi ekranı — parametre almaz */
   TodoList: undefined;
 
@@ -18,26 +17,21 @@ export type RootStackParamList = {
 
   /**
    * Görev detay ekranı.
-   * Backend'de GET /api/todos/:id endpoint'i olmadığından
-   * Todo nesnesi liste ekranından params üzerinden taşınır.
    */
   TaskDetail: { todo: Todo };
 };
 
-/** `TodoListScreen` için navigation + route prop tipleri */
-export type TodoListScreenProps = NativeStackScreenProps<
-  RootStackParamList,
-  'TodoList'
->;
+/**
+ * Auth stack'inin parametre haritası (unauthenticated).
+ */
+export type AuthStackParamList = {
+  Login: undefined;
+  Register: undefined;
+};
 
-/** `TodoFormScreen` için navigation + route prop tipleri */
-export type TodoFormScreenProps = NativeStackScreenProps<
-  RootStackParamList,
-  'TodoForm'
->;
+/** Geriye dönük uyumluluk için alias */
+export type RootStackParamList = AppStackParamList;
 
-/** `TaskDetailScreen` için navigation + route prop tipleri */
-export type TaskDetailScreenProps = NativeStackScreenProps<
-  RootStackParamList,
-  'TaskDetail'
->;
+export type TodoListScreenProps  = NativeStackScreenProps<AppStackParamList, 'TodoList'>;
+export type TodoFormScreenProps  = NativeStackScreenProps<AppStackParamList, 'TodoForm'>;
+export type TaskDetailScreenProps = NativeStackScreenProps<AppStackParamList, 'TaskDetail'>;

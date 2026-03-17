@@ -12,6 +12,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     /// <summary>Todo tablosunu temsil eden koleksiyon.</summary>
     public DbSet<Todo> Todos { get; set; }
 
+    /// <summary>User tablosunu temsil eden koleksiyon.</summary>
+    public DbSet<User> Users { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -49,12 +52,41 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(t => t.Tags)
                   .HasMaxLength(500);
 
+            // UserId: isteğe bağlı (nullable), maksimum 36 karakter (GUID string).
+            entity.Property(t => t.UserId)
+                  .HasMaxLength(36);
+
+            // IX_Todos_UserId: kullanıcıya göre filtreleme için index.
+            entity.HasIndex(t => t.UserId).HasDatabaseName("IX_Todos_UserId");
+
             // CreatedAt ve UpdatedAt: zorunlu
             // Değer ataması repository sorumluluğundadır (DateTime.UtcNow).
             entity.Property(t => t.CreatedAt)
                   .IsRequired();
 
             entity.Property(t => t.UpdatedAt)
+                  .IsRequired();
+        });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(u => u.Id);
+
+            // Email: zorunlu, maksimum 256 karakter, unique index
+            entity.Property(u => u.Email)
+                  .IsRequired()
+                  .HasMaxLength(256);
+
+            entity.HasIndex(u => u.Email)
+                  .IsUnique()
+                  .HasDatabaseName("IX_Users_Email");
+
+            // PasswordHash: zorunlu
+            entity.Property(u => u.PasswordHash)
+                  .IsRequired();
+
+            // CreatedAt: zorunlu
+            entity.Property(u => u.CreatedAt)
                   .IsRequired();
         });
     }

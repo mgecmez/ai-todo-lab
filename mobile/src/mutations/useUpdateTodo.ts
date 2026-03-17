@@ -2,8 +2,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateTodo } from '../services/api/todosApi';
 import type { Todo, UpdateTodoRequest } from '../types/todo';
 import { TODO_PRIORITY } from '../types/todo';
-import { TODOS_QUERY_KEY } from '../query/queryKeys';
+import { cacheKeys } from '../query/queryKeys';
 import { notificationService } from '../services/notifications/notificationService';
+import { useAuth } from '../context/AuthContext';
 
 /** useMutation değişken tipi: id + request birlikte taşınır. */
 interface UpdateTodoVariables {
@@ -46,20 +47,22 @@ interface UpdateTodoContext {
  */
 export function useUpdateTodo() {
   const queryClient = useQueryClient();
+  const { userId } = useAuth();
+  const queryKey = userId ? cacheKeys.todos(userId) : (['todos', '__disabled__'] as const);
 
   return useMutation<Todo, Error, UpdateTodoVariables, UpdateTodoContext>({
     mutationFn: ({ id, request }) => updateTodo(id, request),
 
     onMutate: async ({ id, request }) => {
       // 1) Devam eden refetch'leri iptal et: yarışma koşulunu önler.
-      await queryClient.cancelQueries({ queryKey: TODOS_QUERY_KEY });
+      await queryClient.cancelQueries({ queryKey });
 
       // 2) Mevcut cache'i snapshot al; rollback için sakla.
-      const previous = queryClient.getQueryData<Todo[]>(TODOS_QUERY_KEY);
+      const previous = queryClient.getQueryData<Todo[]>(queryKey);
 
       // 3) İlgili todo'yu optimistic olarak güncelle.
       //    Belirtilmeyen opsiyonel alanlar için mevcut todo değeri korunur.
-      queryClient.setQueryData<Todo[]>(TODOS_QUERY_KEY, (old) =>
+      queryClient.setQueryData<Todo[]>(queryKey, (old) =>
         (old ?? []).map((t) => {
           if (t.id !== id) return t;
           return {
@@ -98,13 +101,13 @@ export function useUpdateTodo() {
     onError: (_error, _variables, context) => {
       // Optimistic güncellemeyi geri al: snapshot'a dön.
       if (context?.previous !== undefined) {
-        queryClient.setQueryData<Todo[]>(TODOS_QUERY_KEY, context.previous);
+        queryClient.setQueryData<Todo[]>(queryKey, context.previous);
       }
     },
 
     onSettled: () => {
       // Başarılı ya da hatalı; backend'den doğrulanmış listeyi çek.
-      queryClient.invalidateQueries({ queryKey: TODOS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 }

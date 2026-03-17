@@ -1,0 +1,18 @@
+using TodoApp.Api.DTOs.Auth;
+
+namespace TodoApp.Api.Services;
+
+public interface IUserService
+{
+    /// <summary>
+    /// Yeni kullanıcı kaydeder ve JWT token döner.
+    /// Email zaten kayıtlıysa UserAlreadyExistsException fırlatır.
+    /// </summary>
+    Task<AuthResponse> RegisterAsync(RegisterRequest request);
+
+    /// <summary>
+    /// Email ve şifre doğrulaması yapar, başarılıysa JWT token döner.
+    /// Başarısızlıkta null döner.
+    /// </summary>
+    Task<AuthResponse?> LoginAsync(LoginRequest request);
+}

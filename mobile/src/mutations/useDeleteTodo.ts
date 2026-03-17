@@ -1,8 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteTodo } from '../services/api/todosApi';
 import type { Todo } from '../types/todo';
-import { TODOS_QUERY_KEY } from '../query/queryKeys';
+import { cacheKeys } from '../query/queryKeys';
 import { notificationService } from '../services/notifications/notificationService';
+import { useAuth } from '../context/AuthContext';
 
 interface DeleteTodoContext {
   previous: Todo[] | undefined;
@@ -22,17 +23,19 @@ interface DeleteTodoContext {
  */
 export function useDeleteTodo() {
   const queryClient = useQueryClient();
+  const { userId } = useAuth();
+  const queryKey = userId ? cacheKeys.todos(userId) : (['todos', '__disabled__'] as const);
 
   return useMutation<void, Error, string, DeleteTodoContext>({
     mutationFn: (id) => deleteTodo(id),
 
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: TODOS_QUERY_KEY });
+      await queryClient.cancelQueries({ queryKey });
 
-      const previous = queryClient.getQueryData<Todo[]>(TODOS_QUERY_KEY);
+      const previous = queryClient.getQueryData<Todo[]>(queryKey);
 
       // Silinecek todo'yu cache'ten anında çıkar.
-      queryClient.setQueryData<Todo[]>(TODOS_QUERY_KEY, (old) =>
+      queryClient.setQueryData<Todo[]>(queryKey, (old) =>
         (old ?? []).filter((t) => t.id !== id),
       );
 
@@ -48,12 +51,12 @@ export function useDeleteTodo() {
 
     onError: (_error, _id, context) => {
       if (context?.previous !== undefined) {
-        queryClient.setQueryData<Todo[]>(TODOS_QUERY_KEY, context.previous);
+        queryClient.setQueryData<Todo[]>(queryKey, context.previous);
       }
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: TODOS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 }

@@ -13,15 +13,16 @@ namespace TodoApp.Api.Repositories;
 public class EfTodoRepository(AppDbContext dbContext) : ITodoRepository
 {
     /// <summary>
-    /// Tüm todo'ları sıralar:
+    /// Kullanıcıya ait tüm todo'ları sıralar:
     ///   1. IsPinned DESC   — sabitlenmiş görevler her zaman üstte
     ///   2. Priority  DESC  — Urgent → High → Normal → Low
     ///   3. DueDate   ASC, null'lar sona  — yakın tarihli önce
     ///   4. CreatedAt DESC  — eşitlerde en yeni üste
     /// </summary>
-    public IReadOnlyList<Todo> GetAll()
+    public IReadOnlyList<Todo> GetAll(string userId)
     {
         return dbContext.Todos
+            .Where(t => t.UserId == userId)
             .OrderByDescending(t => t.IsPinned)
             .ThenByDescending(t => t.Priority)
             .ThenBy(t => t.DueDate == null)
@@ -32,26 +33,20 @@ public class EfTodoRepository(AppDbContext dbContext) : ITodoRepository
     }
 
     /// <summary>
-    /// Verilen id'ye sahip todo'yu döndürür; bulunamazsa null döner.
+    /// Verilen id ve userId'ye sahip todo'yu döndürür; bulunamazsa null döner.
     /// </summary>
-    public Todo? GetById(Guid id)
+    public Todo? GetById(Guid id, string userId)
     {
-        return dbContext.Todos.Find(id);
+        return dbContext.Todos.FirstOrDefault(t => t.Id == id && t.UserId == userId);
     }
 
     /// <summary>
-    /// Yeni bir todo oluşturur. Id, CreatedAt, UpdatedAt ve IsCompleted
-    /// değerlerini burada atar; IsPinned her zaman false olarak başlar.
-    /// Priority, DueDate ve Tags controller'dan gelen todo nesnesiyle taşınır.
+    /// Yeni bir todo'yu persist eder.
+    /// Id, CreatedAt, UpdatedAt, IsCompleted, IsPinned ve UserId değerleri
+    /// TodoService tarafından atanmış gelir; repository sadece kaydeder.
     /// </summary>
     public Todo Add(Todo todo)
     {
-        todo.Id = Guid.NewGuid();
-        todo.CreatedAt = DateTime.UtcNow;
-        todo.UpdatedAt = DateTime.UtcNow;
-        todo.IsCompleted = false;
-        todo.IsPinned = false; // Oluşturma anında pin yok; PATCH /pin ile yapılır.
-
         dbContext.Todos.Add(todo);
         dbContext.SaveChanges();
 
@@ -59,12 +54,12 @@ public class EfTodoRepository(AppDbContext dbContext) : ITodoRepository
     }
 
     /// <summary>
-    /// Verilen id'ye sahip todo'nun alanlarını günceller.
+    /// Verilen id ve userId'ye sahip todo'nun alanlarını günceller.
     /// Todo bulunamazsa null döner.
     /// </summary>
-    public Todo? Update(Guid id, Todo updated)
+    public Todo? Update(Guid id, string userId, Todo updated)
     {
-        var existing = dbContext.Todos.Find(id);
+        var existing = dbContext.Todos.FirstOrDefault(t => t.Id == id && t.UserId == userId);
         if (existing is null) return null;
 
         existing.Title = updated.Title;
@@ -74,7 +69,7 @@ public class EfTodoRepository(AppDbContext dbContext) : ITodoRepository
         existing.DueDate = updated.DueDate;
         existing.IsPinned = updated.IsPinned;
         existing.Tags = updated.Tags;
-        existing.UpdatedAt = DateTime.UtcNow;
+        existing.UpdatedAt = updated.UpdatedAt; // TodoService tarafından atanmış değeri kullan
 
         dbContext.SaveChanges();
 
@@ -82,12 +77,12 @@ public class EfTodoRepository(AppDbContext dbContext) : ITodoRepository
     }
 
     /// <summary>
-    /// Verilen id'ye sahip todo'yu siler.
+    /// Verilen id ve userId'ye sahip todo'yu siler.
     /// Başarılıysa true, todo bulunamazsa false döner.
     /// </summary>
-    public bool Delete(Guid id)
+    public bool Delete(Guid id, string userId)
     {
-        var todo = dbContext.Todos.Find(id);
+        var todo = dbContext.Todos.FirstOrDefault(t => t.Id == id && t.UserId == userId);
         if (todo is null) return false;
 
         dbContext.Todos.Remove(todo);
@@ -100,9 +95,9 @@ public class EfTodoRepository(AppDbContext dbContext) : ITodoRepository
     /// Todo'nun IsCompleted değerini tersine çevirir ve UpdatedAt'ı günceller.
     /// Todo bulunamazsa null döner.
     /// </summary>
-    public Todo? ToggleComplete(Guid id)
+    public Todo? ToggleComplete(Guid id, string userId)
     {
-        var todo = dbContext.Todos.Find(id);
+        var todo = dbContext.Todos.FirstOrDefault(t => t.Id == id && t.UserId == userId);
         if (todo is null) return null;
 
         todo.IsCompleted = !todo.IsCompleted;
@@ -117,9 +112,9 @@ public class EfTodoRepository(AppDbContext dbContext) : ITodoRepository
     /// Todo'nun IsPinned değerini tersine çevirir ve UpdatedAt'ı günceller.
     /// Todo bulunamazsa null döner.
     /// </summary>
-    public Todo? TogglePin(Guid id)
+    public Todo? TogglePin(Guid id, string userId)
     {
-        var todo = dbContext.Todos.Find(id);
+        var todo = dbContext.Todos.FirstOrDefault(t => t.Id == id && t.UserId == userId);
         if (todo is null) return null;
 
         todo.IsPinned = !todo.IsPinned;

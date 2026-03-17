@@ -8,24 +8,34 @@ namespace TodoApp.Api.Tests;
 public class TodoApiIntegrationTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
+    private readonly HttpClient _anonClient;
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public TodoApiIntegrationTests(CustomWebApplicationFactory factory)
     {
-        _client = factory.CreateClient();
+        _client     = factory.CreateAuthenticatedClient();
+        _anonClient = factory.CreateClient();
     }
 
     // TICKET-011 / Senaryo 1: GET /health -> 200 + { status: "ok" }
     [Fact]
     public async Task Health_Returns200_WithStatusOk()
     {
-        var response = await _client.GetAsync("/health");
+        var response = await _anonClient.GetAsync("/health");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var body = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
         Assert.Equal("ok", body.GetProperty("status").GetString());
+    }
+
+    // AUTH: GET /api/todos token olmadan -> 401
+    [Fact]
+    public async Task GetAllTodos_WithoutToken_Returns401()
+    {
+        var response = await _anonClient.GetAsync("/api/todos");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     // TICKET-011 / Senaryo 2: POST /api/todos (valid) -> 201 + Location + dönen body title
@@ -257,5 +267,28 @@ public class TodoApiIntegrationTests : IClassFixture<CustomWebApplicationFactory
         var payload = new { title = "Geçersiz priority", priority = 99 };
         var response = await _client.PostAsJsonAsync("/api/todos", payload);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    // AUTH: Kullanıcı A todo'su, Kullanıcı B ile görünmemeli
+    [Fact]
+    public async Task GetAllTodos_UserIsolation_OtherUserCannotSeeMyTodos()
+    {
+        var factory = new CustomWebApplicationFactory();
+        var clientA = factory.CreateAuthenticatedClient("user-a");
+        var clientB = factory.CreateAuthenticatedClient("user-b");
+
+        // Kullanıcı A todo oluşturuyor
+        var title = $"A kullanıcısının todo'su {Guid.NewGuid()}";
+        var createResponse = await clientA.PostAsJsonAsync("/api/todos", new { title });
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var created = await createResponse.Content.ReadFromJsonAsync<Todo>(JsonOptions);
+        Assert.NotNull(created);
+
+        // Kullanıcı B listeyi alıyor — A'nın todo'su görünmemeli
+        var listResponse = await clientB.GetAsync("/api/todos");
+        Assert.Equal(HttpStatusCode.OK, listResponse.StatusCode);
+        var todos = await listResponse.Content.ReadFromJsonAsync<List<Todo>>(JsonOptions);
+        Assert.NotNull(todos);
+        Assert.DoesNotContain(todos, t => t.Id == created.Id);
     }
 }

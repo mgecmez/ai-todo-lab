@@ -38,6 +38,17 @@ export const colors = {
   // Text — inputs & labels
   textPlaceholder: '#4A6A8A',
   textCancel: '#00BCD4',
+
+  // Auth ekranı token'ları
+  authButtonBg: '#0EA5E9',
+  authButtonPressed: '#0284C7',
+  surfaceAuthInput: '#FFFFFF',
+  textAuthInput: '#1A1A1A',
+  textAuthPlaceholder: 'rgba(0,0,0,0.44)',
+  textAuthLink: '#63D9F3',
+  textAuthLinkMuted: 'rgba(255,255,255,0.80)',
+  authInputIcon: 'rgba(0,0,0,0.44)',
+  errorBg: 'rgba(244,67,54,0.15)',
 } as const;
 
 export type Colors = typeof colors;

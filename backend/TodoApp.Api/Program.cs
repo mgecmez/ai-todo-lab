@@ -1,6 +1,12 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using TodoApp.Api.Data;
+using TodoApp.Api.Models;
 using TodoApp.Api.Repositories;
+using TodoApp.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,9 +14,6 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 // ── EF Core + SQLite ────────────────────────────────────────────────────────
-// Connection string appsettings.json'dan okunur.
-// Dosya yolu ContentRootPath ile mutlaklaştırılır; böylece "dotnet run" ve
-// publish çıktısı gibi farklı çalışma dizinlerinde todos.db hep aynı yerde oluşur.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("'DefaultConnection' bulunamadı. appsettings.json dosyasını kontrol et.");
 
@@ -24,11 +27,35 @@ if (!Path.IsPathRooted(dbPath))
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(connectionString));
 
-// ── Repository kaydı ────────────────────────────────────────────────────────
-// Scoped: her HTTP isteği kendi DbContext instance'ını alır (EF Core gerekliliği).
-builder.Services.AddScoped<ITodoRepository, EfTodoRepository>();
+// ── JWT Authentication ───────────────────────────────────────────────────────
+var jwtSecret = builder.Configuration["Jwt:Secret"]
+    ?? throw new InvalidOperationException("'Jwt:Secret' bulunamadı.");
 
-// ── CORS ────────────────────────────────────────────────────────────────────
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer           = true,
+            ValidateAudience         = true,
+            ValidateLifetime         = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer              = builder.Configuration["Jwt:Issuer"],
+            ValidAudience            = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+// ── Repository ve Service kayıtları ─────────────────────────────────────────
+builder.Services.AddScoped<ITodoRepository, EfTodoRepository>();
+builder.Services.AddScoped<ITodoService, TodoService>();
+builder.Services.AddScoped<IUserRepository, EfUserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
+
+// ── CORS ─────────────────────────────────────────────────────────────────────
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -41,10 +68,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// ── Otomatik migration ──────────────────────────────────────────────────────
-// Uygulama her başladığında bekleyen migration varsa otomatik olarak uygular.
-// todos.db yoksa oluşturur; InitialCreate migration'ı çalıştırır.
-// IsRelational() kontrolü: InMemory provider (entegrasyon testleri) bu bloğu atlar.
+// ── Otomatik migration ───────────────────────────────────────────────────────
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -57,7 +81,9 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+// Middleware sıralaması kritik: Authentication → Authorization
 app.UseCors();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
