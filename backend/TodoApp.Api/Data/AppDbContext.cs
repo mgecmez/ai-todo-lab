@@ -66,6 +66,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
             entity.Property(t => t.UpdatedAt)
                   .IsRequired();
+
+            // Soft delete alanları
+            entity.Property(t => t.IsDeleted)
+                  .IsRequired()
+                  .HasDefaultValue(false);
+
+            entity.Property(t => t.DeletedAt);
+
+            entity.HasQueryFilter(t => !t.IsDeleted);
+
+            entity.HasIndex(t => new { t.UserId, t.IsDeleted })
+                  .HasDatabaseName("IX_Todos_UserId_IsDeleted");
         });
 
         modelBuilder.Entity<User>(entity =>
@@ -88,6 +100,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             // CreatedAt: zorunlu
             entity.Property(u => u.CreatedAt)
                   .IsRequired();
+
+            // Soft delete alanları
+            entity.Property(u => u.IsDeleted)
+                  .IsRequired()
+                  .HasDefaultValue(false);
+
+            entity.Property(u => u.DeletedAt);
+
+            entity.HasQueryFilter(u => !u.IsDeleted);
+
+            entity.HasIndex(u => new { u.Email, u.IsDeleted })
+                  .HasDatabaseName("IX_Users_Email_IsDeleted");
         });
     }
 }

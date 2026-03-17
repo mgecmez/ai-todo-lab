@@ -85,7 +85,8 @@ public class EfTodoRepository(AppDbContext dbContext) : ITodoRepository
         var todo = dbContext.Todos.FirstOrDefault(t => t.Id == id && t.UserId == userId);
         if (todo is null) return false;
 
-        dbContext.Todos.Remove(todo);
+        todo.IsDeleted = true;
+        todo.DeletedAt = DateTime.UtcNow;
         dbContext.SaveChanges();
 
         return true;

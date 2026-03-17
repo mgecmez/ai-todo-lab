@@ -1,6 +1,6 @@
 namespace TodoApp.Api.Models;
 
-public class Todo
+public class Todo : ISoftDeletable
 {
     public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
@@ -13,4 +13,6 @@ public class Todo
     public string? UserId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
 }

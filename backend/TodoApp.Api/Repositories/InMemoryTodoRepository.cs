@@ -11,7 +11,7 @@ public class InMemoryTodoRepository : ITodoRepository
     {
         lock (_lock)
         {
-            return _todos.Where(t => t.UserId == userId).ToList().AsReadOnly();
+            return _todos.Where(t => t.UserId == userId && !t.IsDeleted).ToList().AsReadOnly();
         }
     }
 
@@ -19,7 +19,7 @@ public class InMemoryTodoRepository : ITodoRepository
     {
         lock (_lock)
         {
-            return _todos.FirstOrDefault(t => t.Id == id && t.UserId == userId);
+            return _todos.FirstOrDefault(t => t.Id == id && t.UserId == userId && !t.IsDeleted);
         }
     }
 
@@ -57,10 +57,11 @@ public class InMemoryTodoRepository : ITodoRepository
     {
         lock (_lock)
         {
-            var todo = _todos.FirstOrDefault(t => t.Id == id && t.UserId == userId);
+            var todo = _todos.FirstOrDefault(t => t.Id == id && t.UserId == userId && !t.IsDeleted);
             if (todo is null) return false;
 
-            _todos.Remove(todo);
+            todo.IsDeleted = true;
+            todo.DeletedAt = DateTime.UtcNow;
             return true;
         }
     }

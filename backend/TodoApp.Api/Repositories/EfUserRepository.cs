@@ -18,4 +18,41 @@ public class EfUserRepository(AppDbContext dbContext) : IUserRepository
         await dbContext.SaveChangesAsync();
         return user;
     }
+
+    public async Task<User?> GetByIdAsync(Guid userId)
+    {
+        return await dbContext.Users.FindAsync(userId);
+    }
+
+    public async Task<User> UpdateAsync(User user)
+    {
+        dbContext.Users.Update(user);
+        await dbContext.SaveChangesAsync();
+        return user;
+    }
+
+    public async Task DeleteAsync(Guid userId)
+    {
+        var userIdStr = userId.ToString();
+        var now = DateTime.UtcNow;
+
+        var todos = await dbContext.Todos
+            .Where(t => t.UserId == userIdStr)
+            .ToListAsync();
+
+        foreach (var todo in todos)
+        {
+            todo.IsDeleted = true;
+            todo.DeletedAt = now;
+        }
+
+        var user = await dbContext.Users.FindAsync(userId);
+        if (user is not null)
+        {
+            user.IsDeleted = true;
+            user.DeletedAt = now;
+        }
+
+        await dbContext.SaveChangesAsync();
+    }
 }

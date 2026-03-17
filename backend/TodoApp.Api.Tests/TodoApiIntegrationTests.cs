@@ -269,6 +269,56 @@ public class TodoApiIntegrationTests : IClassFixture<CustomWebApplicationFactory
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    // SFTDEL-006 / Senaryo 1: DELETE todo → 204, liste'den kayboluyor
+    [Fact]
+    public async Task DeleteTodo_Returns204_AndTodoDisappearsFromList()
+    {
+        var createResponse = await _client.PostAsJsonAsync("/api/todos", new { title = "Silinecek todo" });
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var created = await createResponse.Content.ReadFromJsonAsync<Todo>(JsonOptions);
+        Assert.NotNull(created);
+
+        var deleteResponse = await _client.DeleteAsync($"/api/todos/{created.Id}");
+        Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+
+        var listResponse = await _client.GetAsync("/api/todos");
+        Assert.Equal(HttpStatusCode.OK, listResponse.StatusCode);
+        var todos = await listResponse.Content.ReadFromJsonAsync<List<Todo>>(JsonOptions);
+        Assert.NotNull(todos);
+        Assert.DoesNotContain(todos, t => t.Id == created.Id);
+    }
+
+    // SFTDEL-006 / Senaryo 2: Soft-deleted todo'ya GET by id → 404
+    [Fact]
+    public async Task DeleteTodo_ThenGetById_Returns404()
+    {
+        var createResponse = await _client.PostAsJsonAsync("/api/todos", new { title = "Id ile aranacak, silinecek todo" });
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var created = await createResponse.Content.ReadFromJsonAsync<Todo>(JsonOptions);
+        Assert.NotNull(created);
+
+        await _client.DeleteAsync($"/api/todos/{created.Id}");
+
+        var getResponse = await _client.GetAsync($"/api/todos/{created.Id}");
+        Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
+    }
+
+    // SFTDEL-006 / Senaryo 3: Soft-deleted todo'ya ikinci kez DELETE → 404
+    [Fact]
+    public async Task DeleteTodo_AlreadyDeleted_Returns404()
+    {
+        var createResponse = await _client.PostAsJsonAsync("/api/todos", new { title = "İki kez silinmeye çalışılacak" });
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var created = await createResponse.Content.ReadFromJsonAsync<Todo>(JsonOptions);
+        Assert.NotNull(created);
+
+        var firstDelete = await _client.DeleteAsync($"/api/todos/{created.Id}");
+        Assert.Equal(HttpStatusCode.NoContent, firstDelete.StatusCode);
+
+        var secondDelete = await _client.DeleteAsync($"/api/todos/{created.Id}");
+        Assert.Equal(HttpStatusCode.NotFound, secondDelete.StatusCode);
+    }
+
     // AUTH: Kullanıcı A todo'su, Kullanıcı B ile görünmemeli
     [Fact]
     public async Task GetAllTodos_UserIsolation_OtherUserCannotSeeMyTodos()
