@@ -23,6 +23,7 @@ interface AuthState {
 interface AuthContextValue extends AuthState {
   login: (token: string, userId: string, email: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateEmail: (newEmail: string) => Promise<void>;
 }
 
 // ─── Secure Store Keys ────────────────────────────────────────────────────────
@@ -97,6 +98,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setState({ token: null, userId: null, email: null, isLoading: false });
   }, [queryClient]);
 
+  const updateEmail = useCallback(async (newEmail: string) => {
+    await SecureStore.setItemAsync(KEY_EMAIL, newEmail);
+    setState(prev => ({ ...prev, email: newEmail }));
+  }, []);
+
   const login = useCallback(
     async (token: string, userId: string, email: string) => {
       await Promise.all([
@@ -118,6 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ...state,
     login,
     logout,
+    updateEmail,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

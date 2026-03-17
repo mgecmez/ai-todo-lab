@@ -13,8 +13,15 @@
  *   notification sistemi sessizce devre dışı kalır; uygulama crash etmez.
  */
 
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import type { Todo } from '../../types/todo';
 import { notificationRegistry } from './notificationRegistry';
+
+// Expo Go Android'de SDK 53+ itibaren expo-notifications native seviyede crash veriyor.
+// Bu ortamda bildirimleri tamamen devre dışı bırak.
+const isExpoGoAndroid =
+  Platform.OS === 'android' && Constants.appOwnership === 'expo';
 
 let permissionGranted = false;
 
@@ -23,6 +30,7 @@ let permissionGranted = false;
 let _notificationsCache: (typeof import('expo-notifications')) | null | undefined = undefined;
 
 async function loadNotifications(): Promise<(typeof import('expo-notifications')) | null> {
+  if (isExpoGoAndroid) return null;
   if (_notificationsCache !== undefined) return _notificationsCache;
 
   try {

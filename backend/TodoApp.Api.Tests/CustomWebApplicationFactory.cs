@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -43,6 +44,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
                 new DbContextOptionsBuilder<AppDbContext>()
                     .UseInMemoryDatabase(_databaseName, _dbRoot)
                     .EnableServiceProviderCaching(false)
+                    .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
                     .Options);
         });
 

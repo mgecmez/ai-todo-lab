@@ -19,6 +19,15 @@ export type AppStackParamList = {
    * Görev detay ekranı.
    */
   TaskDetail: { todo: Todo };
+
+  /** Profil ekranı — parametre almaz */
+  Profile: undefined;
+
+  /** E-posta değiştirme ekranı — parametre almaz */
+  ChangeEmail: undefined;
+
+  /** Şifre değiştirme ekranı — parametre almaz */
+  ChangePassword: undefined;
 };
 
 /**
@@ -35,3 +44,6 @@ export type RootStackParamList = AppStackParamList;
 export type TodoListScreenProps  = NativeStackScreenProps<AppStackParamList, 'TodoList'>;
 export type TodoFormScreenProps  = NativeStackScreenProps<AppStackParamList, 'TodoForm'>;
 export type TaskDetailScreenProps = NativeStackScreenProps<AppStackParamList, 'TaskDetail'>;
+export type ProfileScreenProps = NativeStackScreenProps<AppStackParamList, 'Profile'>;
+export type ChangeEmailScreenProps = NativeStackScreenProps<AppStackParamList, 'ChangeEmail'>;
+export type ChangePasswordScreenProps = NativeStackScreenProps<AppStackParamList, 'ChangePassword'>;

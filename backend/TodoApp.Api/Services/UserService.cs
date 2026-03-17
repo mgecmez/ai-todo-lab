@@ -59,6 +59,74 @@ public class UserService(
         };
     }
 
+    public async Task<UserProfileResponse?> GetProfileAsync(string userId)
+    {
+        var user = await userRepository.GetByIdAsync(Guid.Parse(userId));
+        if (user is null) return null;
+
+        return new UserProfileResponse
+        {
+            UserId    = user.Id.ToString(),
+            Email     = user.Email,
+            CreatedAt = user.CreatedAt,
+        };
+    }
+
+    public async Task<UserProfileResponse> ChangeEmailAsync(string userId, ChangeEmailRequest request)
+    {
+        var user = await userRepository.GetByIdAsync(Guid.Parse(userId));
+
+        var verifyResult = passwordHasher.VerifyHashedPassword(user!, user!.PasswordHash, request.CurrentPassword);
+        if (verifyResult == PasswordVerificationResult.Failed)
+            throw new WrongPasswordException();
+
+        if (request.NewEmail.ToLowerInvariant() == user.Email.ToLowerInvariant())
+            throw new SameEmailException();
+
+        var existing = await userRepository.GetByEmailAsync(request.NewEmail);
+        if (existing is not null)
+            throw new UserAlreadyExistsException(request.NewEmail);
+
+        user.Email = request.NewEmail.ToLowerInvariant();
+
+        var updated = await userRepository.UpdateAsync(user);
+
+        return new UserProfileResponse
+        {
+            UserId    = updated.Id.ToString(),
+            Email     = updated.Email,
+            CreatedAt = updated.CreatedAt,
+        };
+    }
+
+    public async Task ChangePasswordAsync(string userId, ChangePasswordRequest request)
+    {
+        var user = await userRepository.GetByIdAsync(Guid.Parse(userId));
+
+        var verifyCurrentResult = passwordHasher.VerifyHashedPassword(user!, user!.PasswordHash, request.CurrentPassword);
+        if (verifyCurrentResult == PasswordVerificationResult.Failed)
+            throw new WrongPasswordException();
+
+        var verifyNewResult = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.NewPassword);
+        if (verifyNewResult == PasswordVerificationResult.Success)
+            throw new SamePasswordException();
+
+        user.PasswordHash = passwordHasher.HashPassword(user, request.NewPassword);
+
+        await userRepository.UpdateAsync(user);
+    }
+
+    public async Task DeleteAccountAsync(string userId, DeleteAccountRequest request)
+    {
+        var user = await userRepository.GetByIdAsync(Guid.Parse(userId));
+
+        var verifyResult = passwordHasher.VerifyHashedPassword(user!, user!.PasswordHash, request.CurrentPassword);
+        if (verifyResult == PasswordVerificationResult.Failed)
+            throw new WrongPasswordException();
+
+        await userRepository.DeleteAsync(Guid.Parse(userId));
+    }
+
     private string GenerateJwt(User user)
     {
         var secret   = configuration["Jwt:Secret"]!;

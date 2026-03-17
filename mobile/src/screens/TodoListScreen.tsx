@@ -1,6 +1,6 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useCallback, useState } from 'react';
+import { useCallback, useLayoutEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -163,6 +163,21 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
   // iOS'ta RefreshControl spinner'ını (ve dolayısıyla UIScrollView inset
   // değişimini) tetiklememeli; aksi hâlde liste scroll jump yapar.
   const [userRefreshing, setUserRefreshing] = useState(false);
+
+  // Header sağ üst köşesine profil butonu ekle.
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Profile')}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          activeOpacity={0.6}
+        >
+          <Ionicons name="person-circle-outline" size={26} color={colors.textOnDark} />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   // Ekran odağa geldiğinde (edit/create'den dönüş dahil) listeyi yenile.
   // useQuery refetchOnWindowFocus React Native'de otomatik tetiklenmez;

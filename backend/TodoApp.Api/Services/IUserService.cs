@@ -15,4 +15,9 @@ public interface IUserService
     /// Başarısızlıkta null döner.
     /// </summary>
     Task<AuthResponse?> LoginAsync(LoginRequest request);
+
+    Task<UserProfileResponse?> GetProfileAsync(string userId);
+    Task<UserProfileResponse> ChangeEmailAsync(string userId, ChangeEmailRequest request);
+    Task ChangePasswordAsync(string userId, ChangePasswordRequest request);
+    Task DeleteAccountAsync(string userId, DeleteAccountRequest request);
 }

@@ -26,12 +26,13 @@ export function registerUnauthorizedCallback(fn: () => void): void {
  */
 export async function apiFetch(
   path: string,
-  options: RequestInit = {},
+  options: RequestInit & { skipUnauthorized?: boolean } = {},
 ): Promise<Response> {
+  const { skipUnauthorized, ...fetchOptions } = options;
   const token = await SecureStore.getItemAsync('auth_token');
 
   const headers: Record<string, string> = {
-    ...(options.headers as Record<string, string> | undefined),
+    ...(fetchOptions.headers as Record<string, string> | undefined),
   };
 
   if (token) {
@@ -39,9 +40,9 @@ export async function apiFetch(
   }
 
   try {
-    const response = await fetch(path, { ...options, headers });
+    const response = await fetch(path, { ...fetchOptions, headers });
 
-    if (response.status === 401) {
+    if (response.status === 401 && !skipUnauthorized) {
       _onUnauthorized?.();
     }
 
