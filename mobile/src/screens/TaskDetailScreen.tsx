@@ -19,13 +19,9 @@ import { usePinTodo } from '../mutations/usePinTodo';
 import { useDeleteTodo } from '../mutations/useDeleteTodo';
 import { friendlyErrorMessage } from '../utils/errorMessage';
 import { isLocalId } from '../utils/localId';
+import { formatDate } from '../utils/formatDate';
 
 // ─── Yardımcılar ─────────────────────────────────────────────────────────────
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
 
 function isOverdue(dueDate: string | null, isCompleted: boolean): boolean {
   if (!dueDate || isCompleted) return false;

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import DateTimePickerField from '../components/DateTimePickerField';
 import FormField from '../components/FormField';
 import PrimaryButton from '../components/PrimaryButton';
 import ScreenGradient from '../components/ScreenGradient';
@@ -43,10 +44,9 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
   const [priority, setPriority] = useState<TodoPriority>(
     editTodo?.priority ?? TODO_PRIORITY.Normal,
   );
-  const [dueDateText, setDueDateText] = useState(
-    editTodo?.dueDate ? editTodo.dueDate.slice(0, 10) : '',
+  const [dueDate, setDueDate] = useState<Date | null>(
+    editTodo?.dueDate ? new Date(editTodo.dueDate) : null,
   );
-  const [dueDate, setDueDate] = useState<string | null>(editTodo?.dueDate ?? null);
   const [isPinned, setIsPinned] = useState(editTodo?.isPinned ?? false);
   const [tags, setTags] = useState(editTodo?.tags ?? '');
   const [reminderOffset, setReminderOffset] = useState<number | null>(
@@ -61,8 +61,6 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
 
   // Mutation paused duruma geçtiğinde (backend unreachable → kuyruklandı)
   // form kapanır; kullanıcı optimistic item'ı listede pending olarak görür.
-  // isPaused yalnızca başarılı kuyruklamada true olur; 4xx/5xx hataları
-  // onError üzerinden gelir ve aşağıdaki saveError state'ini günceller.
   const mutationQueued = createMutation.isPaused || updateMutation.isPaused;
   useEffect(() => {
     if (mutationQueued) {
@@ -73,25 +71,10 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
   const [titleError, setTitleError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  function handleDueDateChange(text: string) {
-    setDueDateText(text);
-    if (text.trim() === '') {
-      setDueDate(null);
-      setReminderOffset(null);
-      return;
-    }
-    const parsed = new Date(text.trim());
-    const valid = !isNaN(parsed.getTime());
-    setDueDate(valid ? parsed.toISOString() : null);
-    // Tarih geçersizleşirse mevcut reminder seçimini koru;
-    // kullanıcı yazı yazarken her keystroke'ta reminder sıfırlanmasın.
-  }
-
-  function handleClearDueDate() {
-    setDueDateText('');
-    setDueDate(null);
+  function handleDueDateChange(date: Date | null) {
+    setDueDate(date);
     // dueDate olmadan reminder anlamsız; otomatik sıfırla.
-    setReminderOffset(null);
+    if (!date) setReminderOffset(null);
   }
 
   function handleSave() {
@@ -102,10 +85,8 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
     setTitleError(null);
     setSaveError(null);
 
-    // Mutation başarılı → geri dön; hata → saveError göster.
-    // onMutate cache'i anında günceller (optimistic); goBack() başarı
-    // callback'inde çağrıldığından online'da doğrulama sonrası, offline'da
-    // ise mutasyon paused kuyruğuna alındığında form kilitli kalır.
+    const dueDateISO = dueDate ? dueDate.toISOString() : null;
+
     const onSuccess = () => navigation.goBack();
     const onError = (e: Error) => setSaveError(friendlyErrorMessage(e));
 
@@ -118,11 +99,11 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
             description: description.trim() || undefined,
             isCompleted: editTodo.isCompleted,
             priority,
-            dueDate,
+            dueDate: dueDateISO,
             isPinned,
             tags: tags.trim() || null,
             // dueDate yoksa reminder anlamsız; null'a sıfırla.
-            reminderOffset: dueDate ? reminderOffset : null,
+            reminderOffset: dueDateISO ? reminderOffset : null,
           },
         },
         { onSuccess, onError },
@@ -133,11 +114,11 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
           title: title.trim(),
           description: description.trim() || undefined,
           priority,
-          dueDate: dueDate ?? undefined,
+          dueDate: dueDateISO ?? undefined,
           isPinned,
           tags: tags.trim() || undefined,
           // dueDate yoksa reminder anlamsız; undefined (= null) ilet.
-          reminderOffset: dueDate && reminderOffset ? reminderOffset : undefined,
+          reminderOffset: dueDateISO && reminderOffset ? reminderOffset : undefined,
         },
         { onSuccess, onError },
       );
@@ -201,25 +182,13 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
           })}
         </View>
 
-        {/* ── Due Date ── */}
-        <FormField
+        {/* ── Due Date — Native Picker ── */}
+        <DateTimePickerField
           label="Son Tarih"
-          value={dueDateText}
-          onChangeText={handleDueDateChange}
-          placeholder="YYYY-AA-GG  (örn. 2026-03-15)"
-          icon="calendar-outline"
-          editable={!saving}
-          returnKeyType="next"
+          value={dueDate}
+          onChange={handleDueDateChange}
+          disabled={saving}
         />
-        {dueDateText.length > 0 && (
-          <TouchableOpacity
-            style={styles.clearDueDateBtn}
-            onPress={handleClearDueDate}
-            disabled={saving}
-          >
-            <Text style={styles.clearDueDateText}>Tarihi Temizle</Text>
-          </TouchableOpacity>
-        )}
 
         {/* ── IsPinned ── */}
         <View style={styles.switchRow}>
@@ -325,16 +294,6 @@ const styles = StyleSheet.create({
   },
   priorityBtnTextSelected: {
     color: colors.textOnDark,
-  },
-  // ── Due Date ──
-  clearDueDateBtn: {
-    alignSelf: 'flex-start',
-    marginTop: -spacing.sm,
-    marginBottom: spacing.md,
-  },
-  clearDueDateText: {
-    fontSize: fontSize.captionError,
-    color: colors.textCancel,
   },
   // ── IsPinned ──
   switchRow: {
