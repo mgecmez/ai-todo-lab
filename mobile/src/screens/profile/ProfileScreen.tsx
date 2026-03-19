@@ -28,6 +28,7 @@ import {
   sizes,
   spacing,
 } from '../../theme/tokens';
+import { commonStyles } from '../../theme/commonStyles';
 
 // ─── Yardımcı: createdAt tarihini Türkçe formata çevirir ─────────────────────
 
@@ -94,8 +95,8 @@ export default function ProfileScreen() {
   if (isLoading) {
     return (
       <ScreenGradient>
-        <SafeAreaView style={styles.safeArea}>
-          <View style={styles.center}>
+        <SafeAreaView style={commonStyles.safeArea}>
+          <View style={commonStyles.center}>
             <ActivityIndicator size="large" color={colors.textOnDark} />
             <Text style={styles.loadingText}>Yükleniyor...</Text>
           </View>
@@ -108,13 +109,13 @@ export default function ProfileScreen() {
   if (isError || !profile) {
     return (
       <ScreenGradient>
-        <SafeAreaView style={styles.safeArea}>
-          <View style={styles.center}>
-            <Text style={styles.errorText}>
+        <SafeAreaView style={commonStyles.safeArea}>
+          <View style={commonStyles.center}>
+            <Text style={commonStyles.screenErrorText}>
               Profil bilgileri yüklenemedi.
             </Text>
-            <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
-              <Text style={styles.retryText}>Tekrar Dene</Text>
+            <TouchableOpacity style={commonStyles.retryBtn} onPress={() => refetch()}>
+              <Text style={commonStyles.retryText}>Tekrar Dene</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -125,8 +126,8 @@ export default function ProfileScreen() {
   // ── Normal görünüm ───────────────────────────────────────────────────────────
   return (
     <ScreenGradient>
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.container}>
+      <SafeAreaView style={commonStyles.safeArea}>
+        <View style={commonStyles.screenContainer}>
 
           {/* ── Profil bilgisi satırı ─────────────────────────────────────── */}
           <View style={styles.profileRow}>
@@ -224,7 +225,7 @@ export default function ProfileScreen() {
             />
 
             {deleteError !== null && (
-              <Text style={styles.modalError}>{deleteError}</Text>
+              <Text style={commonStyles.formErrorText}>{deleteError}</Text>
             )}
 
             <TouchableOpacity
@@ -244,12 +245,12 @@ export default function ProfileScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.modalCancelBtn}
+              style={commonStyles.outlineBtn}
               onPress={handleCloseModal}
               disabled={isDeleting}
               activeOpacity={0.7}
             >
-              <Text style={styles.modalCancelText}>Vazgeç</Text>
+              <Text style={commonStyles.outlineBtnText}>Vazgeç</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -261,42 +262,9 @@ export default function ProfileScreen() {
 // ─── Stiller ─────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing['2xl'],
-    paddingBottom: spacing['3xl'],
-  },
-
-  // ── State: loading / error ──────────────────────────────────────────────────
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.md,
-  },
+  // ── State: loading ──────────────────────────────────────────────────────────
   loadingText: {
     color: colors.textOnDarkSecondary,
-    fontSize: fontSize.body,
-  },
-  errorText: {
-    color: colors.delete,
-    fontSize: fontSize.body,
-    textAlign: 'center',
-    paddingHorizontal: spacing['2xl'],
-  },
-  retryBtn: {
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.delete,
-  },
-  retryText: {
-    color: colors.delete,
     fontSize: fontSize.body,
   },
 
@@ -435,12 +403,6 @@ const styles = StyleSheet.create({
     borderColor: colors.textOnDarkSecondary,
     marginBottom: spacing.md,
   },
-  modalError: {
-    fontSize: fontSize.captionError,
-    color: colors.delete,
-    marginBottom: spacing.md,
-    textAlign: 'center',
-  },
   modalDeleteBtn: {
     height: sizes.button,
     backgroundColor: colors.delete,
@@ -456,18 +418,5 @@ const styles = StyleSheet.create({
     fontSize: fontSize.buttonPrimary,
     fontWeight: fontWeight.semiBold,
     color: colors.surfaceCard,
-  },
-  modalCancelBtn: {
-    height: sizes.button,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.textOnCardMeta,
-  },
-  modalCancelText: {
-    fontSize: fontSize.buttonSecondary,
-    fontWeight: fontWeight.medium,
-    color: colors.textOnCard,
   },
 });

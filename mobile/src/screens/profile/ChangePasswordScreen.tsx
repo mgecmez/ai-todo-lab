@@ -12,15 +12,8 @@ import {
 } from 'react-native';
 import ScreenGradient from '../../components/ScreenGradient';
 import { changePassword } from '../../services/profile/profileService';
-import {
-  colors,
-  fontSize,
-  fontWeight,
-  radius,
-  shadows,
-  sizes,
-  spacing,
-} from '../../theme/tokens';
+import { colors, fontSize, fontWeight, spacing } from '../../theme/tokens';
+import { commonStyles } from '../../theme/commonStyles';
 
 // ─── Ana ekran bileşeni ───────────────────────────────────────────────────────
 
@@ -71,16 +64,16 @@ export default function ChangePasswordScreen() {
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <ScreenGradient>
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.container}>
+      <SafeAreaView style={commonStyles.safeArea}>
+        <View style={commonStyles.screenContainer}>
 
           {/* ── Form kartı ────────────────────────────────────────────────── */}
-          <View style={styles.card}>
+          <View style={commonStyles.formCard}>
 
             {/* Mevcut Şifre */}
             <Text style={styles.label}>Mevcut Şifre</Text>
             <TextInput
-              style={styles.input}
+              style={commonStyles.formInput}
               placeholder="Mevcut şifrenizi girin"
               placeholderTextColor={colors.textPlaceholder}
               secureTextEntry
@@ -93,7 +86,7 @@ export default function ChangePasswordScreen() {
             {/* Yeni Şifre */}
             <Text style={styles.label}>Yeni Şifre</Text>
             <TextInput
-              style={styles.input}
+              style={commonStyles.formInput}
               placeholder="Yeni şifrenizi girin"
               placeholderTextColor={colors.textPlaceholder}
               secureTextEntry
@@ -106,7 +99,7 @@ export default function ChangePasswordScreen() {
             {/* Yeni Şifre Tekrar */}
             <Text style={styles.label}>Yeni Şifre Tekrar</Text>
             <TextInput
-              style={styles.input}
+              style={commonStyles.formInput}
               placeholder="Yeni şifrenizi tekrar girin"
               placeholderTextColor={colors.textPlaceholder}
               secureTextEntry
@@ -118,7 +111,7 @@ export default function ChangePasswordScreen() {
 
             {/* Hata mesajı */}
             {error !== null && (
-              <Text style={styles.errorText}>{error}</Text>
+              <Text style={commonStyles.formErrorText}>{error}</Text>
             )}
 
             {/* Başarı mesajı */}
@@ -128,7 +121,7 @@ export default function ChangePasswordScreen() {
 
             {/* Kaydet butonu */}
             <TouchableOpacity
-              style={[styles.submitBtn, isSubmitting && styles.submitBtnDisabled]}
+              style={[commonStyles.primaryBtn, { marginBottom: spacing.sm }, isSubmitting && commonStyles.primaryBtnDisabled]}
               onPress={handleSubmit}
               disabled={isSubmitting}
               activeOpacity={0.8}
@@ -136,18 +129,18 @@ export default function ChangePasswordScreen() {
               {isSubmitting ? (
                 <ActivityIndicator size="small" color={colors.surfaceCard} />
               ) : (
-                <Text style={styles.submitBtnText}>Kaydet</Text>
+                <Text style={commonStyles.primaryBtnText}>Kaydet</Text>
               )}
             </TouchableOpacity>
 
             {/* İptal butonu */}
             <TouchableOpacity
-              style={styles.cancelBtn}
+              style={commonStyles.outlineBtn}
               onPress={() => navigation.goBack()}
               disabled={isSubmitting}
               activeOpacity={0.7}
             >
-              <Text style={styles.cancelBtnText}>Vazgeç</Text>
+              <Text style={commonStyles.outlineBtnText}>Vazgeç</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -159,85 +152,16 @@ export default function ChangePasswordScreen() {
 // ─── Stiller ─────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing['2xl'],
-    paddingBottom: spacing['3xl'],
-  },
-
-  // ── Form kartı ───────────────────────────────────────────────────────────────
-  card: {
-    backgroundColor: colors.surfaceCard,
-    borderRadius: radius.md,
-    padding: spacing['2xl'],
-    ...shadows.card,
-  },
-
-  // ── Form alanları ────────────────────────────────────────────────────────────
   label: {
     fontSize: fontSize.label,
     fontWeight: fontWeight.medium,
     color: colors.textOnCard,
     marginBottom: spacing.xs,
   },
-  input: {
-    height: sizes.inputSingleLine,
-    backgroundColor: colors.surfaceAuthInput,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.lg,
-    fontSize: fontSize.body,
-    color: colors.textAuthInput,
-    borderWidth: 1,
-    borderColor: colors.textOnDarkSecondary,
-    marginBottom: spacing.lg,
-  },
-
-  // ── Mesajlar ─────────────────────────────────────────────────────────────────
-  errorText: {
-    fontSize: fontSize.captionError,
-    color: colors.delete,
-    marginBottom: spacing.md,
-    textAlign: 'center',
-  },
   successText: {
     fontSize: fontSize.captionError,
     color: colors.done,
     marginBottom: spacing.md,
     textAlign: 'center',
-  },
-
-  // ── Butonlar ─────────────────────────────────────────────────────────────────
-  submitBtn: {
-    height: sizes.button,
-    backgroundColor: colors.primary,
-    borderRadius: radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  submitBtnDisabled: {
-    opacity: 0.6,
-  },
-  submitBtnText: {
-    fontSize: fontSize.buttonPrimary,
-    fontWeight: fontWeight.semiBold,
-    color: colors.surfaceCard,
-  },
-  cancelBtn: {
-    height: sizes.button,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.textOnCardMeta,
-  },
-  cancelBtnText: {
-    fontSize: fontSize.buttonSecondary,
-    fontWeight: fontWeight.medium,
-    color: colors.textOnCard,
   },
 });

@@ -16,6 +16,8 @@ import ScreenGradient from '../components/ScreenGradient';
 import SearchBar from '../components/SearchBar';
 import type { TodoListScreenProps } from '../navigation/types';
 import { colors, fontSize, radius, shadows, spacing } from '../theme/tokens';
+import { commonStyles } from '../theme/commonStyles';
+import { formatDate } from '../utils/formatDate';
 import { PRIORITY_META, type Todo } from '../types/todo';
 import { useTodos } from '../hooks/useTodos';
 import { useDeleteTodo } from '../mutations/useDeleteTodo';
@@ -23,11 +25,6 @@ import { useToggleTodo } from '../mutations/useToggleTodo';
 import { usePinTodo } from '../mutations/usePinTodo';
 import { friendlyErrorMessage } from '../utils/errorMessage';
 import { isLocalId } from '../utils/localId';
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
 
 function isOverdue(dueDate: string | null, isCompleted: boolean): boolean {
   if (!dueDate || isCompleted) return false;
@@ -246,7 +243,7 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
   if (isLoading) {
     return (
       <ScreenGradient>
-        <View style={styles.center}>
+        <View style={commonStyles.center}>
           <ActivityIndicator size="large" color={colors.textOnDark} />
           <Text style={styles.hint}>Yükleniyor…</Text>
         </View>
@@ -261,10 +258,10 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
     const errorMessage = error instanceof Error ? error.message : 'Bir hata oluştu.';
     return (
       <ScreenGradient>
-        <View style={styles.center}>
-          <Text style={styles.errorText}>⚠ {errorMessage}</Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
-            <Text style={styles.retryText}>Tekrar Dene</Text>
+        <View style={commonStyles.center}>
+          <Text style={commonStyles.screenErrorText}>⚠ {errorMessage}</Text>
+          <TouchableOpacity style={commonStyles.retryBtn} onPress={() => refetch()}>
+            <Text style={commonStyles.retryText}>Tekrar Dene</Text>
           </TouchableOpacity>
         </View>
       </ScreenGradient>
@@ -316,32 +313,9 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  // ── State: loading / error ──────────────────────────────────────────────────
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.md,
-  },
+  // ── State: loading ──────────────────────────────────────────────────────────
   hint: {
     color: colors.textOnDarkSecondary,
-    fontSize: fontSize.body,
-  },
-  errorText: {
-    color: colors.delete,
-    fontSize: fontSize.body,
-    textAlign: 'center',
-    paddingHorizontal: spacing['2xl'],
-  },
-  retryBtn: {
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.delete,
-  },
-  retryText: {
-    color: colors.delete,
     fontSize: fontSize.body,
   },
 
