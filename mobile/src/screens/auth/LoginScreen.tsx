@@ -35,7 +35,7 @@ export default function LoginScreen({ navigation }: Props) {
     setIsLoading(true);
     try {
       const res = await login(email.trim(), password);
-      await authLogin(res.token, res.userId, res.email);
+      await authLogin(res.accessToken, res.refreshToken, res.userId, res.email);
     } catch (e) {
       setError(e instanceof Error ? e.message : t('login.errorGeneric'));
     } finally {

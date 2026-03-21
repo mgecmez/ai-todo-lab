@@ -10,18 +10,21 @@ import React, {
   useState,
 } from 'react';
 import { registerUnauthorizedCallback } from '../services/api/config';
+import { logoutApi } from '../services/api/authApi';
+import { AUTH_REFRESH_TOKEN_KEY } from '../services/cache/cacheKeys';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface AuthState {
   token: string | null;
+  refreshToken: string | null;
   userId: string | null;
   email: string | null;
   isLoading: boolean;
 }
 
 interface AuthContextValue extends AuthState {
-  login: (token: string, userId: string, email: string) => Promise<void>;
+  login: (accessToken: string, refreshToken: string, userId: string, email: string) => Promise<void>;
   logout: () => Promise<void>;
   updateEmail: (newEmail: string) => Promise<void>;
 }
@@ -43,16 +46,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const [state, setState] = useState<AuthState>({
     token: null,
+    refreshToken: null,
     userId: null,
     email: null,
     isLoading: true,
   });
 
-  // userId'yi logout içinde kullanabilmek için ref'te tut
+  // userId ve token değerlerini logout içinde kullanabilmek için ref'te tut
   const userIdRef = useRef<string | null>(null);
+  const tokenRef = useRef<string | null>(null);
+  const refreshTokenRef = useRef<string | null>(null);
+
   useEffect(() => {
     userIdRef.current = state.userId;
   }, [state.userId]);
+
+  useEffect(() => {
+    tokenRef.current = state.token;
+  }, [state.token]);
+
+  useEffect(() => {
+    refreshTokenRef.current = state.refreshToken;
+  }, [state.refreshToken]);
 
   // Mount sırasında SecureStore'dan mevcut oturumu restore et
   useEffect(() => {
@@ -60,18 +75,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     async function restoreSession() {
       try {
-        const [token, userId, email] = await Promise.all([
+        const [token, storedRefreshToken, userId, email] = await Promise.all([
           SecureStore.getItemAsync(KEY_TOKEN),
+          SecureStore.getItemAsync(AUTH_REFRESH_TOKEN_KEY),
           SecureStore.getItemAsync(KEY_USER_ID),
           SecureStore.getItemAsync(KEY_EMAIL),
         ]);
 
         if (!cancelled) {
-          setState({ token, userId, email, isLoading: false });
+          setState({ token, refreshToken: storedRefreshToken, userId, email, isLoading: false });
         }
       } catch {
         if (!cancelled) {
-          setState({ token: null, userId: null, email: null, isLoading: false });
+          setState({ token: null, refreshToken: null, userId: null, email: null, isLoading: false });
         }
       }
     }
@@ -82,11 +98,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     const currentUserId = userIdRef.current;
+    const currentToken = tokenRef.current;
+    const currentRefreshToken = refreshTokenRef.current;
+
+    // Best-effort: sunucu tarafında refresh token'ı iptal et
+    if (currentToken && currentRefreshToken) {
+      try {
+        await logoutApi(currentToken, currentRefreshToken);
+      } catch {
+        // Sunucu hatası logout'u engellemez
+      }
+    }
 
     await Promise.all([
       SecureStore.deleteItemAsync(KEY_TOKEN),
       SecureStore.deleteItemAsync(KEY_USER_ID),
       SecureStore.deleteItemAsync(KEY_EMAIL),
+      SecureStore.deleteItemAsync(AUTH_REFRESH_TOKEN_KEY),
     ]);
 
     queryClient.clear();
@@ -95,7 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await AsyncStorage.removeItem(`todos_cache_${currentUserId}`);
     }
 
-    setState({ token: null, userId: null, email: null, isLoading: false });
+    setState({ token: null, refreshToken: null, userId: null, email: null, isLoading: false });
   }, [queryClient]);
 
   const updateEmail = useCallback(async (newEmail: string) => {
@@ -104,13 +132,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(
-    async (token: string, userId: string, email: string) => {
+    async (accessToken: string, refreshToken: string, userId: string, email: string) => {
       await Promise.all([
-        SecureStore.setItemAsync(KEY_TOKEN, token),
+        SecureStore.setItemAsync(KEY_TOKEN, accessToken),
+        SecureStore.setItemAsync(AUTH_REFRESH_TOKEN_KEY, refreshToken),
         SecureStore.setItemAsync(KEY_USER_ID, userId),
         SecureStore.setItemAsync(KEY_EMAIL, email),
       ]);
-      setState({ token, userId, email, isLoading: false });
+      setState({ token: accessToken, refreshToken, userId, email, isLoading: false });
     },
     [],
   );

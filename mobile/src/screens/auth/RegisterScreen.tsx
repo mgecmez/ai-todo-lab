@@ -43,7 +43,7 @@ export default function RegisterScreen({ navigation }: Props) {
     setIsLoading(true);
     try {
       const res = await register(email.trim(), password);
-      await authLogin(res.token, res.userId, res.email);
+      await authLogin(res.accessToken, res.refreshToken, res.userId, res.email);
     } catch (e) {
       setError(e instanceof Error ? e.message : t('register.errorGeneric'));
     } finally {
