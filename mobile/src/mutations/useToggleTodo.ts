@@ -3,6 +3,7 @@ import { toggleTodo } from '../services/api/todosApi';
 import type { Todo } from '../types/todo';
 import { cacheKeys } from '../query/queryKeys';
 import { useAuth } from '../context/AuthContext';
+import { notificationService } from '../services/notifications/notificationService';
 
 interface ToggleTodoContext {
   previous: Todo[] | undefined;
@@ -56,6 +57,18 @@ export function useToggleTodo() {
       queryClient.setQueryData<Todo[]>(queryKey, (old) =>
         (old ?? []).map((t) => (t.id === updatedTodo.id ? updatedTodo : t)),
       );
+
+      // Bildirim yönetimi: tamamlandı → iptal; geri alındı + gelecekte → yeniden planla.
+      if (updatedTodo.isCompleted) {
+        notificationService.cancelReminder(updatedTodo.id).catch(() => {});
+      } else if (updatedTodo.dueDate && updatedTodo.reminderOffset != null) {
+        const fireAt = new Date(
+          new Date(updatedTodo.dueDate).getTime() - updatedTodo.reminderOffset * 60 * 1000,
+        );
+        if (fireAt > new Date()) {
+          notificationService.scheduleReminder(updatedTodo).catch(() => {});
+        }
+      }
     },
 
     onError: (_error, _id, context) => {

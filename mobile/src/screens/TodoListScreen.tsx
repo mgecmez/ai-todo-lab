@@ -18,6 +18,7 @@ import type { TodoListScreenProps } from '../navigation/types';
 import { colors, fontSize, radius, shadows, spacing } from '../theme/tokens';
 import { commonStyles } from '../theme/commonStyles';
 import { formatDate } from '../utils/formatDate';
+import { isOverdue } from '../utils/isOverdue';
 import { PRIORITY_META, type Todo } from '../types/todo';
 import { useTodos } from '../hooks/useTodos';
 import { useDeleteTodo } from '../mutations/useDeleteTodo';
@@ -25,11 +26,6 @@ import { useToggleTodo } from '../mutations/useToggleTodo';
 import { usePinTodo } from '../mutations/usePinTodo';
 import { friendlyErrorMessage } from '../utils/errorMessage';
 import { isLocalId } from '../utils/localId';
-
-function isOverdue(dueDate: string | null, isCompleted: boolean): boolean {
-  if (!dueDate || isCompleted) return false;
-  return new Date(dueDate) < new Date();
-}
 
 interface TodoItemProps {
   todo: Todo;

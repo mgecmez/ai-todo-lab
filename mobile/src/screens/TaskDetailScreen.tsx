@@ -20,13 +20,7 @@ import { useDeleteTodo } from '../mutations/useDeleteTodo';
 import { friendlyErrorMessage } from '../utils/errorMessage';
 import { isLocalId } from '../utils/localId';
 import { formatDate } from '../utils/formatDate';
-
-// ─── Yardımcılar ─────────────────────────────────────────────────────────────
-
-function isOverdue(dueDate: string | null, isCompleted: boolean): boolean {
-  if (!dueDate || isCompleted) return false;
-  return new Date(dueDate) < new Date();
-}
+import { isOverdue } from '../utils/isOverdue';
 
 // ─── Action Button ────────────────────────────────────────────────────────────
 

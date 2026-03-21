@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { isOverdue } from '../utils/isOverdue';
 import DateTimePickerField from '../components/DateTimePickerField';
 import FormField from '../components/FormField';
 import PrimaryButton from '../components/PrimaryButton';
@@ -47,6 +48,11 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
   const [dueDate, setDueDate] = useState<Date | null>(
     editTodo?.dueDate ? new Date(editTodo.dueDate) : null,
   );
+  const [allDay, setAllDay] = useState<boolean>(() => {
+    if (!editTodo?.dueDate) return false;
+    const d = new Date(editTodo.dueDate);
+    return d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0;
+  });
   const [isPinned, setIsPinned] = useState(editTodo?.isPinned ?? false);
   const [tags, setTags] = useState(editTodo?.tags ?? '');
   const [reminderOffset, setReminderOffset] = useState<number | null>(
@@ -73,8 +79,17 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
 
   function handleDueDateChange(date: Date | null) {
     setDueDate(date);
-    // dueDate olmadan reminder anlamsız; otomatik sıfırla.
-    if (!date) setReminderOffset(null);
+    if (!date) {
+      // dueDate olmadan reminder ve allDay anlamsız; otomatik sıfırla.
+      setReminderOffset(null);
+      setAllDay(false);
+    } else if (isOverdue(date.toISOString(), false)) {
+      Alert.alert(
+        'Geçmiş Tarih',
+        'Seçilen tarih geçmiş bir zamana ait. Görevi yine de kaydedebilirsiniz.',
+        [{ text: 'Tamam' }],
+      );
+    }
   }
 
   function handleSave() {
@@ -188,7 +203,23 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
           value={dueDate}
           onChange={handleDueDateChange}
           disabled={saving}
+          placeholder="Tarih seçilmedi"
+          allDay={allDay}
         />
+
+        {/* ── All Day toggle — sadece dueDate seçiliyken göster ── */}
+        {dueDate && (
+          <View style={styles.switchRow}>
+            <Text style={styles.fieldLabel}>Tüm Gün</Text>
+            <Switch
+              value={allDay}
+              onValueChange={setAllDay}
+              disabled={saving}
+              trackColor={{ false: colors.surfaceInput, true: colors.primary }}
+              thumbColor={colors.textOnDark}
+            />
+          </View>
+        )}
 
         {/* ── IsPinned ── */}
         <View style={styles.switchRow}>

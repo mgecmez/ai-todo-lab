@@ -20,6 +20,17 @@ interface DateTimePickerFieldProps {
   value: Date | null;
   onChange: (date: Date | null) => void;
   disabled?: boolean;
+  placeholder?: string;
+  allDay?: boolean;
+}
+
+function buildMidnightUTC(localDate: Date): Date {
+  return new Date(Date.UTC(
+    localDate.getFullYear(),
+    localDate.getMonth(),
+    localDate.getDate(),
+    0, 0, 0, 0,
+  ));
 }
 
 type PickerPhase = 'date' | 'time' | 'closed';
@@ -31,6 +42,8 @@ export default function DateTimePickerField({
   value,
   onChange,
   disabled = false,
+  placeholder = 'Select date',
+  allDay = false,
 }: DateTimePickerFieldProps) {
   // iOS için: hangi aşamadayız?
   const [phase, setPhase] = useState<PickerPhase>('closed');
@@ -60,7 +73,11 @@ export default function DateTimePickerField({
       mode: 'date',
       onChange: (event, selectedDate) => {
         if (event.type === 'dismissed' || !selectedDate) return;
-        openAndroidTime(selectedDate);
+        if (allDay) {
+          onChange(buildMidnightUTC(selectedDate));
+        } else {
+          openAndroidTime(selectedDate);
+        }
       },
     });
   }
@@ -85,8 +102,13 @@ export default function DateTimePickerField({
 
   function handleIOSConfirm() {
     if (phase === 'date') {
-      setPendingDate(currentPickerValue);
-      setPhase('time');
+      if (allDay) {
+        onChange(buildMidnightUTC(currentPickerValue));
+        setPhase('closed');
+      } else {
+        setPendingDate(currentPickerValue);
+        setPhase('time');
+      }
     } else {
       // Tarih kısmını pendingDate'den, saat kısmını currentPickerValue'dan al
       const combined = new Date(pendingDate);
@@ -130,7 +152,7 @@ export default function DateTimePickerField({
             style={[styles.triggerText, !displayText && styles.triggerPlaceholder]}
             numberOfLines={1}
           >
-            {displayText ?? 'Tarih seçilmedi'}
+            {displayText ?? placeholder}
           </Text>
         </TouchableOpacity>
 
