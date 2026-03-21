@@ -39,7 +39,7 @@ public class AuthController_ProfileTests : IClassFixture<CustomWebApplicationFac
         Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
 
         var authBody  = await loginResponse.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
-        var token     = authBody.GetProperty("token").GetString()!;
+        var token     = authBody.GetProperty("accessToken").GetString()!;
         var userId    = authBody.GetProperty("userId").GetString()!;
 
         var client = _factory.CreateClient();
@@ -213,7 +213,7 @@ public class AuthController_ProfileTests : IClassFixture<CustomWebApplicationFac
         await anonClient.PostAsJsonAsync("/api/auth/register", new { email, password });
         var loginResp = await anonClient.PostAsJsonAsync("/api/auth/login", new { email, password });
         var authBody  = await loginResp.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
-        var token     = authBody.GetProperty("token").GetString()!;
+        var token     = authBody.GetProperty("accessToken").GetString()!;
 
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -247,7 +247,7 @@ public class AuthController_ProfileTests : IClassFixture<CustomWebApplicationFac
         await anonClient.PostAsJsonAsync("/api/auth/register", new { email, password });
         var loginResp = await anonClient.PostAsJsonAsync("/api/auth/login", new { email, password });
         var authBody  = await loginResp.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
-        var token     = authBody.GetProperty("token").GetString()!;
+        var token     = authBody.GetProperty("accessToken").GetString()!;
 
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -286,7 +286,7 @@ public class AuthController_ProfileTests : IClassFixture<CustomWebApplicationFac
         await anonClient.PostAsJsonAsync("/api/auth/register", new { email, password });
         var loginResp = await anonClient.PostAsJsonAsync("/api/auth/login", new { email, password });
         var authBody  = await loginResp.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
-        var token     = authBody.GetProperty("token").GetString()!;
+        var token     = authBody.GetProperty("accessToken").GetString()!;
 
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);

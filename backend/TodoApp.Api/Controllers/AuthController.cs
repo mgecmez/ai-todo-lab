@@ -104,4 +104,20 @@ public class AuthController(IUserService userService) : ControllerBase
             return Unauthorized(new { status = 401, message = "Şifreniz hatalı.", errors = new { } });
         }
     }
+
+    [EnableRateLimiting("login")]
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
+    {
+        var response = await userService.RefreshAsync(request.RefreshToken);
+        return response is null ? Unauthorized() : Ok(response);
+    }
+
+    [Authorize]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout([FromBody] RefreshRequest request)
+    {
+        await userService.RevokeRefreshTokenAsync(request.RefreshToken);
+        return NoContent();
+    }
 }

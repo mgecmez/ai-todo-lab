@@ -55,12 +55,15 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         builder.UseSetting("Jwt:Secret", TestJwtSecret);
         builder.UseSetting("Jwt:Issuer", "TodoApp");
         builder.UseSetting("Jwt:Audience", "TodoApp");
-        builder.UseSetting("Jwt:ExpiryDays", "7");
+        builder.UseSetting("Jwt:AccessTokenExpiryMinutes", "60");
+        builder.UseSetting("Jwt:RefreshTokenExpiryDays", "30");
 
         // Genel testlerde rate limit baskısını önlemek için limiti yüksek tut.
         // Rate limit davranışını test etmek için RateLimitWebApplicationFactory kullanın.
         builder.UseSetting("RateLimit:LoginPermitLimit", "1000");
         builder.UseSetting("RateLimit:LoginWindowSeconds", "60");
+        builder.UseSetting("RateLimit:RegisterPermitLimit", "1000");
+        builder.UseSetting("RateLimit:RegisterWindowSeconds", "60");
     }
 
     /// <summary>

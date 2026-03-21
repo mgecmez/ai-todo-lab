@@ -45,6 +45,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience            = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
         };
+
+        options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var sub = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                // Only perform DB check for valid GUID subjects (real user IDs).
+                // Non-GUID subjects are allowed through (e.g. test tokens).
+                if (sub is null || !Guid.TryParse(sub, out var userId))
+                    return;
+
+                var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                var userExists = await db.Users.AnyAsync(u => u.Id == userId);
+                if (!userExists)
+                    context.Fail("User not found or deleted.");
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
