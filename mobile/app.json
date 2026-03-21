@@ -7,9 +7,9 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#05243E"
     },
     "ios": {
       "bundleIdentifier": "com.mgecmez.aitodolab",
@@ -18,8 +18,8 @@
     "android": {
       "package": "com.mgecmez.aitodolab",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#05243E",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },

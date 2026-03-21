@@ -141,5 +141,31 @@
     "confirm": "Tamam",
     "titleDate": "Tarih Seç",
     "titleTime": "Saat Seç"
+  },
+  "onboarding": {
+    "slide1": {
+      "tagline": "Görevlerini yönet, hedeflerine ulaş"
+    },
+    "slide2": {
+      "headline": "Görevlerini Organize Et",
+      "body": "Oluştur, önceliklendir ve sabitle. Her şey tek bir yerde."
+    },
+    "slide3": {
+      "headline": "Hiçbir Tarihi Kaçırma",
+      "body": "Son tarih belirle, tam zamanında hatırlatıcı al."
+    },
+    "slide4": {
+      "headline": "İnternetsiz de Çalışır",
+      "body": "Bağlantın yokken de görev ekle. Bağlantı gelince otomatik senkronize olur."
+    },
+    "slide5": {
+      "headline": "Hazır mısın?"
+    },
+    "cta": {
+      "register": "Hesap Oluştur",
+      "login": "Giriş Yap"
+    },
+    "skip": "Atla",
+    "next": "İleri"
   }
 }

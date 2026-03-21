@@ -141,5 +141,31 @@
     "confirm": "OK",
     "titleDate": "Select Date",
     "titleTime": "Select Time"
+  },
+  "onboarding": {
+    "slide1": {
+      "tagline": "Manage your tasks, reach your goals"
+    },
+    "slide2": {
+      "headline": "Organize Your Tasks",
+      "body": "Create, prioritize and pin. Everything in one place."
+    },
+    "slide3": {
+      "headline": "Never Miss a Deadline",
+      "body": "Set a due date, get reminded right on time."
+    },
+    "slide4": {
+      "headline": "Works Offline Too",
+      "body": "Add tasks without a connection. Auto-syncs when you're back online."
+    },
+    "slide5": {
+      "headline": "Ready to Start?"
+    },
+    "cta": {
+      "register": "Create Account",
+      "login": "Sign In"
+    },
+    "skip": "Skip",
+    "next": "Next"
   }
 }
