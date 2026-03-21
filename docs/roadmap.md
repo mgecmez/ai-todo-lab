@@ -1,6 +1,6 @@
 # AI Todo Lab — Ürün Yol Haritası
 
-Son güncelleme: 2026-03-21
+Son güncelleme: 2026-03-21 (v0.10.0 tamamlandı; BL-044 v1.0.0'a taşındı; BL-050, BL-051 eklendi)
 Kaynak: Cowork roadmap + proje backlog birleşimi
 
 ---
@@ -18,20 +18,7 @@ Kaynak: Cowork roadmap + proje backlog birleşimi
 | v0.7.0 | Profil yönetimi (email/şifre değiştir, hesap sil) | ✅ |
 | v0.8.0 | Soft delete (Todo + User) | ✅ |
 | v0.9.0 | Native datetime picker (tarih + saat seçimi) | ✅ |
-
----
-
-## v0.10.0 — Hızlı Kazanımlar
-
-> Mevcut özelliklerdeki küçük eksikleri kapatan, bağımlılığı olmayan iyileştirmeler.
-
-| BL-ID | Özellik | Açıklama |
-|-------|---------|----------|
-| BL-005 | `isOverdue` utility | İki ekranda tekrarlanan fonksiyon `src/utils/isOverdue.ts`'e taşınır |
-| BL-004 | `DateTimePickerField` placeholder prop | Sabit Türkçe metin yerine prop |
-| BL-001 | "Tüm gün" modu | `dueDate` saat seçimi olmadan sadece tarih; gece yarısı UTC kaydedilir |
-| BL-002 | Geçmiş tarih uyarısı | Picker kapanınca bilgilendirici uyarı (engelleme yok) |
-| BL-003 | Toggle → bildirim iptali | Görev tamamlanınca yerel bildirim otomatik iptal |
+| v0.10.0 | Hızlı kazanımlar (All-Day, geçmiş tarih uyarısı, bildirim iptali, kod kalitesi) | ✅ |
 
 ---
 
@@ -50,6 +37,8 @@ Kaynak: Cowork roadmap + proje backlog birleşimi
 | BL-033 | Development build geçişi | Expo Go'dan EAS Build'e geçiş (push notification için de zorunlu) |
 | BL-032 | Hata izleme (Sentry) | Canlıda oluşan hataların yakalanması ve raporlanması |
 | BL-034 | Performans optimizasyonu | 100+ todo'da akıcı liste; gereksiz re-render temizliği |
+| BL-044 | Çoklu dil desteği (i18n) | react-i18next; Türkçe + İngilizce; dil seçimi ayarlardan — erken altyapı |
+| BL-050 | Tablet / iPad responsive layout | useWindowDimensions breakpoint; geniş kartlar ve spacing; tüm ekranlar test edilmeli |
 
 ---
 
@@ -98,6 +87,7 @@ Kaynak: Cowork roadmap + proje backlog birleşimi
 | BL-039 | Paylaşılan listeler | Başka kullanıcılarla ortak todo listesi oluşturma |
 | BL-040 | Görev atama | Paylaşılan listede belirli kullanıcılara görev atama |
 | BL-020 | Gerçek zamanlı senkronizasyon | SignalR WebSocket; çok cihazda anlık güncelleme |
+| BL-051 | Huawei AppGallery desteği | Huawei Push Kit (HMS) entegrasyonu; store submission süreci |
 
 ---
 
@@ -108,7 +98,6 @@ Kaynak: Cowork roadmap + proje backlog birleşimi
 | BL-ID | Özellik | Açıklama |
 |-------|---------|----------|
 | BL-007 | Dark/Light tema | Sistem teması takip eden otomatik geçiş; `tokens.ts` dark varyant |
-| BL-044 | Çoklu dil desteği | Türkçe + İngilizce; dil seçimi ayarlardan |
 | BL-023 | Sosyal giriş (OAuth) | Google / Apple ile giriş; `expo-auth-session` |
 | BL-024 | 2FA | TOTP (Google Authenticator) veya SMS OTP |
 | BL-041 | AI görev asistanı | Büyük görevi alt görevlere otomatik bölme (Claude API) |
@@ -144,12 +133,11 @@ Kaynak: Cowork roadmap + proje backlog birleşimi
 ## Sürüm İlerleme Özeti
 
 ```
-✅ v0.1 → v0.9   Tamamlandı
-⬜ v0.10          Hızlı kazanımlar (5 madde, ~1 sprint)
-⬜ v1.0           MVP Release (9 madde, ~3 sprint)
+✅ v0.1 → v0.10  Tamamlandı
+⬜ v1.0           MVP Release (11 madde, ~3 sprint)
 ⬜ v1.1           Temel Üretkenlik (9 madde, ~3 sprint)
 ⬜ v1.2           Planlama (4 madde, ~2 sprint)
-⬜ v1.3           İşbirliği (7 madde, ~4 sprint)
-⬜ v1.4           Akıllı Özellikler (7 madde, ~3 sprint)
+⬜ v1.3           İşbirliği (8 madde, ~4 sprint)
+⬜ v1.4           Akıllı Özellikler (6 madde, ~3 sprint)
 ⬜ v2.0           Platform Genişleme (5 madde, uzun vadeli)
 ```

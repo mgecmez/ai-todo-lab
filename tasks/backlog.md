@@ -4,7 +4,7 @@ Bu dosya projenin tüm planlanmış ve ertelenmiş işlerini versiyon bazlı ön
 Versiyon planının tam açıklaması için: `docs/roadmap.md`
 Roadmap durum analizi için: `docs/roadmap-status.md`
 
-Güncelleme: 2026-03-21
+Güncelleme: 2026-03-21 (v0.10.0 tamamlandı; BL-044 v1.0.0'a taşındı; BL-050, BL-051 eklendi)
 
 ---
 
@@ -140,6 +140,27 @@ Canlıda oluşan hataları yakalamak ve raporlamak için Sentry entegrasyonu.
 Liste 100+ todo'da akıcı kalmalı; gereksiz re-render'lar temizlenmeli.
 `React.memo`, `useCallback` kullanımı, FlatList `getItemLayout`,
 `keyExtractor` optimizasyonu.
+
+---
+
+### BL-044 — Çoklu dil desteği (i18n)
+**Alan:** Yerelleştirme
+**Not:** Erken kurulmalı; sonraki tüm özellikler bu altyapı üzerine inşa edilmeli.
+
+`react-i18next` (veya benzeri) ile çoklu dil altyapısı. Tüm kullanıcıya görünen metinler
+(ekran başlıkları, buton label'ları, hata mesajları) çeviri dosyalarından okunacak.
+İlk desteklenecek diller: Türkçe + İngilizce. Dil seçimi uygulama ayarlarından yapılabilmeli.
+Mevcut Türkçe sabit string'ler çeviri anahtarlarına dönüştürülecek.
+
+---
+
+### BL-050 — Tablet / iPad responsive layout
+**Alan:** UI — Platform
+**Not:** Tüm ekranlar hem telefon hem tablet'te test edilmeli.
+
+Mevcut UI yalnızca telefon boyutuna göre tasarlanmış. `useWindowDimensions` ile breakpoint
+tabanlı layout eklenerek iPad ve Android tablet'lerde düzgün görüntüleme sağlanacak.
+Tablet'te daha geniş kartlar, iki sütunlu liste seçeneği ve uygun spacing kullanılacak.
 
 ---
 
@@ -349,6 +370,17 @@ TanStack Query cache ile entegrasyon tasarımı gerektirir.
 
 ---
 
+### BL-051 — Huawei AppGallery desteği
+**Alan:** Platform — Store
+**Bağımlılık:** BL-033 (development build)
+
+Huawei cihazlarda Google Play Services olmadığı için push notification için
+Huawei Push Kit (HMS) entegrasyonu gerekiyor. Uygulama APK/AAB olarak zaten çalışır;
+push altyapısı (HMS token yönetimi, backend'de Huawei push gönderimi) ve
+AppGallery store submission süreci eklenecek.
+
+---
+
 ## v1.4.0 — Akıllı Özellikler
 
 ### BL-007 — Dark / Light tema desteği
@@ -358,14 +390,6 @@ TanStack Query cache ile entegrasyon tasarımı gerektirir.
 Sistem teması (Appearance API) ile otomatik dark/light geçişi. `tokens.ts` içine dark
 varyant renkler eklenmeli; bileşenler `useColorScheme()` hook'una bağlanacak. Mevcut
 tasarım gradient tabanlı ve zaten koyu; light mod için ayrı palet tasarımı gerektirir.
-
----
-
-### BL-044 — Çoklu dil desteği (i18n)
-**Alan:** Yerelleştirme
-
-Türkçe + İngilizce dil desteği. `i18next` + `react-i18next`; dil seçimi ayarlardan.
-Mevcut Türkçe sabit string'ler çeviri anahtarlarına dönüştürülecek.
 
 ---
 
@@ -522,16 +546,18 @@ formatı benimsenmesi gerektirir.
 | BL-032 | Hata izleme (Sentry) | Gözlemlenebilirlik | v1.0.0 |
 | BL-033 | Development build geçişi | Altyapı | v1.0.0 |
 | BL-034 | Performans optimizasyonu | Frontend | v1.0.0 |
+| BL-044 | Çoklu dil desteği (i18n) | Yerelleştirme | v1.0.0 |
+| BL-050 | Tablet / iPad responsive layout | UI | v1.0.0 |
 | BL-035 | Alt görevler (subtask) | Görev Yönetimi | v1.1.0 |
 | BL-036 | Takvim görünümü | Görev Yönetimi | v1.2.0 |
 | BL-037 | Pomodoro zamanlayıcı | Verimlilik | v1.2.0 |
 | BL-038 | Widget desteği | Platform | v1.2.0 |
 | BL-039 | Paylaşılan listeler | İşbirliği | v1.3.0 |
 | BL-040 | Görev atama | İşbirliği | v1.3.0 |
+| BL-051 | Huawei AppGallery desteği | Platform | v1.3.0 |
 | BL-041 | AI görev asistanı | AI | v1.4.0 |
 | BL-042 | Doğal dil görev ekleme | AI | v1.4.0 |
 | BL-043 | Akıllı öneriler | AI | v1.4.0 |
-| BL-044 | Çoklu dil desteği | Yerelleştirme | v1.4.0 |
 | BL-045 | Web uygulaması | Platform | v2.0.0 |
 | BL-046 | Masaüstü uygulaması | Platform | v2.0.0 |
 | BL-047 | Apple Watch / Wear OS | Platform | v2.0.0 |
