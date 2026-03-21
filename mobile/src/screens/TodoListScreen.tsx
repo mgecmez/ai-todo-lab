@@ -1,6 +1,6 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useCallback, useLayoutEffect, useState } from 'react';
+import { memo, useCallback, useLayoutEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -46,7 +46,7 @@ interface TodoItemProps {
   onPin: (id: string) => void;
 }
 
-function TodoItem({ todo, busy, isPending, onDetail, onEdit, onToggle, onDelete, onPin }: TodoItemProps) {
+const TodoItem = memo(function TodoItem({ todo, busy, isPending, onDetail, onEdit, onToggle, onDelete, onPin }: TodoItemProps) {
   const { t } = useTranslation();
   const priorityMeta = PRIORITY_META[todo.priority ?? 1];
   const overdue = isOverdue(todo.dueDate, todo.isCompleted);
@@ -147,7 +147,7 @@ function TodoItem({ todo, busy, isPending, onDetail, onEdit, onToggle, onDelete,
       )}
     </View>
   );
-}
+});
 
 export default function TodoListScreen({ navigation }: TodoListScreenProps) {
   const { t } = useTranslation();
@@ -216,21 +216,27 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
     : todos;
 
   // ── Toggle ───────────────────────────────────────────────────────────────
-  function handleToggle(id: string) {
+  const handleToggle = useCallback((id: string) => {
     toggleMutation.mutate(id, {
       onError: (e) => Alert.alert(t('common.error'), friendlyErrorMessage(e)),
     });
-  }
+  }, [toggleMutation, t]);
 
   // ── Pin ──────────────────────────────────────────────────────────────────
-  function handlePin(id: string) {
+  const handlePin = useCallback((id: string) => {
     pinMutation.mutate(id, {
       onError: (e) => Alert.alert(t('common.error'), friendlyErrorMessage(e)),
     });
-  }
+  }, [pinMutation, t]);
 
   // ── Delete ───────────────────────────────────────────────────────────────
-  function handleDeletePress(id: string) {
+  const handleDeleteConfirm = useCallback((id: string) => {
+    deleteMutation.mutate(id, {
+      onError: (e) => Alert.alert(t('common.error'), friendlyErrorMessage(e)),
+    });
+  }, [deleteMutation, t]);
+
+  const handleDeletePress = useCallback((id: string) => {
     Alert.alert(
       t('todoList.deleteTitle'),
       t('todoList.deleteMessage'),
@@ -239,13 +245,7 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
         { text: t('common.delete'), style: 'destructive', onPress: () => handleDeleteConfirm(id) },
       ],
     );
-  }
-
-  function handleDeleteConfirm(id: string) {
-    deleteMutation.mutate(id, {
-      onError: (e) => Alert.alert(t('common.error'), friendlyErrorMessage(e)),
-    });
-  }
+  }, [t, handleDeleteConfirm]);
 
   // ── Yükleme durumu: cache yok, ilk fetch devam ediyor ───────────────────
   if (isLoading) {
@@ -284,6 +284,10 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
       <FlatList
         data={filteredTodos}
         keyExtractor={(item) => item.id}
+        removeClippedSubviews={true}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
         renderItem={({ item }) => (
           <TodoItem
             todo={item}

@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -55,6 +56,42 @@ builder.Services.AddScoped<IUserRepository, EfUserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 
+// ── Rate Limiting ─────────────────────────────────────────────────────────────
+var loginWindowSeconds = builder.Configuration.GetValue<int>("RateLimit:LoginWindowSeconds", 900);
+var loginPermitLimit   = builder.Configuration.GetValue<int>("RateLimit:LoginPermitLimit", 5);
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("login", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                Window               = TimeSpan.FromSeconds(loginWindowSeconds),
+                PermitLimit          = loginPermitLimit,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit           = 0,
+            }
+        )
+    );
+
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            context.HttpContext.Response.Headers.RetryAfter =
+                ((int)retryAfter.TotalSeconds).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsync(
+            "{\"status\":429,\"message\":\"Çok fazla giriş denemesi. Lütfen daha sonra tekrar deneyin.\"}",
+            cancellationToken);
+    };
+});
+
 // ── CORS ─────────────────────────────────────────────────────────────────────
 builder.Services.AddCors(options =>
 {
@@ -81,8 +118,9 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-// Middleware sıralaması kritik: Authentication → Authorization
+// Middleware sıralaması kritik: RateLimiter → Authentication → Authorization
 app.UseCors();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

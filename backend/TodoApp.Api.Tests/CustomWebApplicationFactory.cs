@@ -19,6 +19,9 @@ namespace TodoApp.Api.Tests;
 /// Üretim ortamında AppDbContext SQLite kullanır. Bu factory, test ortamında
 /// AppDbContext seçeneklerini EF Core InMemory provider ile override eder.
 /// JWT Secret de test değeriyle override edilir.
+///
+/// Rate limit, test izolasyonunu korumak için çok yüksek bir değere ayarlanmıştır
+/// (1000 istek/pencere). Rate limit senaryoları için RateLimitWebApplicationFactory kullanın.
 /// </summary>
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
@@ -53,6 +56,11 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         builder.UseSetting("Jwt:Issuer", "TodoApp");
         builder.UseSetting("Jwt:Audience", "TodoApp");
         builder.UseSetting("Jwt:ExpiryDays", "7");
+
+        // Genel testlerde rate limit baskısını önlemek için limiti yüksek tut.
+        // Rate limit davranışını test etmek için RateLimitWebApplicationFactory kullanın.
+        builder.UseSetting("RateLimit:LoginPermitLimit", "1000");
+        builder.UseSetting("RateLimit:LoginWindowSeconds", "60");
     }
 
     /// <summary>

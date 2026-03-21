@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TodoApp.Api.DTOs.Auth;
 using TodoApp.Api.Exceptions;
 using TodoApp.Api.Services;
@@ -27,6 +28,7 @@ public class AuthController(IUserService userService) : ControllerBase
         }
     }
 
+    [EnableRateLimiting("login")]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
