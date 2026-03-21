@@ -1,45 +1,44 @@
 # AI Todo Lab
 
-Modern, cross-platform bir Todo uygulaması.
-React Native (Expo) ile geliştirilmiş mobil arayüz ve .NET tabanlı backend API içerir.
+A modern, cross-platform Todo application built with React Native (Expo) and a .NET Web API backend.
 
-Bu proje, **AI agent destekli bir geliştirme süreci** ile oluşturulmuş bir referans uygulamadır. Amaç hem modern mobil mimariyi hem de agent-driven development yaklaşımını göstermek.
+This project is a reference implementation developed through an **AI agent-driven development process**, demonstrating both modern mobile architecture and the agent-driven development approach.
 
 ---
 
-## ✨ Özellikler
+## ✨ Features
 
-### Kimlik Doğrulama
-- 🔐 Email ve şifre ile kayıt & giriş
-- 🔑 JWT tabanlı oturum yönetimi
-- 🔒 Güvenli token saklama (SecureStore)
+### Authentication
+- 🔐 Register and sign in with email and password
+- 🔑 JWT-based session management
+- 🔒 Secure token storage (SecureStore)
 
-### Profil Yönetimi
-- 👤 Profil ekranı (email, kayıt tarihi)
-- ✉️ Email değiştirme
-- 🔏 Şifre değiştirme
-- 🗑 Hesap silme
+### Profile Management
+- 👤 Profile screen (email, registration date)
+- ✉️ Change email
+- 🔏 Change password
+- 🗑 Delete account
 
-### Görev Yönetimi
-- ✅ Görev oluşturma, düzenleme, tamamlama, silme
-- 📌 Görev sabitleme (pin)
-- 🏷 Etiket desteği
-- 📅 Son tarih (due date)
-- ⚡ Öncelik seviyeleri (Low / Normal / High / Urgent)
-- 🔎 Gerçek zamanlı arama
+### Task Management
+- ✅ Create, edit, complete, and delete tasks
+- 📌 Pin tasks to the top of the list
+- 🏷 Label support
+- 📅 Due date with native date/time picker (iOS & Android)
+- ⚡ Priority levels (Low / Normal / High / Urgent)
+- 🔎 Real-time search
 
-### Bildirimler
-- 🔔 Yerel hatırlatıcılar (5 dk / 15 dk / 30 dk / 1 saat / 1 gün öncesi)
+### Notifications
+- 🔔 Local reminders (5 min / 15 min / 30 min / 1 hour / 1 day before due date)
 
-### Offline & Senkronizasyon
-- 📶 Offline-first veri mimarisi
-- 🔄 Otomatik arka plan senkronizasyonu
+### Offline & Sync
+- 📶 Offline-first data architecture
+- 🔄 Automatic background synchronization
 - ⚡ Optimistic UI updates
-- 💾 Kalıcı sorgu cache (AsyncStorage)
+- 💾 Persistent query cache (AsyncStorage)
 
-### Veri Güvenliği
-- 🛡 Soft delete — silinen kayıtlar veritabanından fiziksel olarak kaldırılmaz
-- 🔏 Kullanıcı verisi izolasyonu — her kullanıcı yalnızca kendi verilerini görür
+### Data Safety
+- 🛡 Soft delete — deleted records are never physically removed from the database
+- 🔏 User data isolation — each user can only access their own data
 
 ---
 
@@ -59,7 +58,7 @@ Bu proje, **AI agent destekli bir geliştirme süreci** ile oluşturulmuş bir r
 
 ---
 
-## 🧱 Proje Mimarisi
+## 🧱 Architecture
 
 ```
 ai-todo-lab
@@ -68,45 +67,46 @@ ai-todo-lab
 │   └─ TodoApp.Api
 │       ├─ Controllers        # TodosController, AuthController
 │       ├─ Data               # AppDbContext (EF Core)
-│       ├─ DTOs               # Request/Response modelleri
-│       ├─ Exceptions         # Domain exception'ları
+│       ├─ DTOs               # Request/Response models
+│       ├─ Exceptions         # Domain exceptions
 │       ├─ Migrations         # EF Core migrations
 │       ├─ Models             # Todo, User, ISoftDeletable
-│       ├─ Repositories       # ITodoRepository, IUserRepository, implementasyonlar
-│       └─ Services           # ITodoService, IUserService, implementasyonlar
+│       ├─ Repositories       # ITodoRepository, IUserRepository, implementations
+│       └─ Services           # ITodoService, IUserService, implementations
 │
 ├─ mobile
 │   ├─ App.tsx
 │   └─ src
-│       ├─ components         # Reusable UI bileşenleri
+│       ├─ components         # Reusable UI components (incl. DateTimePickerField)
 │       ├─ context            # AuthContext
-│       ├─ mutations          # TanStack Query mutation hook'ları
-│       ├─ navigation         # Stack navigator, route tipleri
+│       ├─ mutations          # TanStack Query mutation hooks
+│       ├─ navigation         # Stack navigator, route types
 │       ├─ screens
 │       │   ├─ profile        # ProfileScreen, ChangeEmailScreen, ChangePasswordScreen
 │       │   └─ ...            # TodoListScreen, TodoFormScreen, TaskDetailScreen
 │       ├─ services
 │       │   ├─ api            # apiFetch interceptor
-│       │   ├─ notifications  # Yerel bildirim servisi
+│       │   ├─ notifications  # Local notification service
 │       │   └─ profile        # profileService
-│       └─ theme              # Design tokens (renkler, spacing, radius, font)
+│       ├─ theme              # Design tokens (colors, spacing, radius, font)
+│       └─ utils              # Shared utilities (formatDate)
 │
-├─ docs                       # Mimari belgeler, spec'ler, test raporları
-└─ tasks                      # Sprint task listeleri
+├─ docs                       # Architecture docs, specs, test reports, release notes
+└─ tasks                      # Sprint task definitions
 ```
 
 ---
 
-## ⚙️ Backend Kurulumu (.NET)
+## ⚙️ Backend Setup (.NET)
 
 ```bash
 cd backend/TodoApp.Api
 dotnet run --urls "http://localhost:5100"
 ```
 
-API şu adreste çalışır: `http://localhost:5100`
+API runs at `http://localhost:5100`
 
-### Backend Testleri
+### Backend Tests
 
 ```bash
 dotnet test backend/TodoApp.Api.Tests
@@ -114,7 +114,7 @@ dotnet test backend/TodoApp.Api.Tests
 
 ---
 
-## 📱 Mobile Kurulumu (Expo)
+## 📱 Mobile Setup (Expo)
 
 ```bash
 cd mobile
@@ -122,9 +122,9 @@ npm install
 npx expo start
 ```
 
-Android emulator için `a`, iOS simulator için `i` tuşuna basın.
+Press `a` for Android emulator, `i` for iOS simulator.
 
-### TypeScript Kontrolü
+### TypeScript Check
 
 ```bash
 cd mobile && npx tsc --noEmit
@@ -132,45 +132,45 @@ cd mobile && npx tsc --noEmit
 
 ---
 
-## 🔌 API Endpoints
+## 🔌 API Reference
 
 ### Auth
 
-| Method | Path | Açıklama |
-|--------|------|----------|
-| POST | /api/auth/register | Yeni hesap oluştur |
-| POST | /api/auth/login | Giriş yap, JWT token al |
-| GET | /api/auth/me | Profil bilgilerini getir |
-| PUT | /api/auth/email | Email değiştir |
-| PUT | /api/auth/password | Şifre değiştir |
-| DELETE | /api/auth/account | Hesabı sil |
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | /api/auth/register | Create a new account |
+| POST | /api/auth/login | Sign in, receive JWT token |
+| GET | /api/auth/me | Get profile information |
+| PUT | /api/auth/email | Change email |
+| PUT | /api/auth/password | Change password |
+| DELETE | /api/auth/account | Delete account (soft delete) |
 
 ### Todos
 
-| Method | Path | Açıklama |
-|--------|------|----------|
-| GET | /api/todos | Kullanıcıya ait tüm görevler |
-| POST | /api/todos | Yeni görev oluştur |
-| PUT | /api/todos/{id} | Görevi güncelle |
-| DELETE | /api/todos/{id} | Görevi soft-delete ile sil |
-| PATCH | /api/todos/{id}/toggle | Tamamlama durumunu değiştir |
-| PATCH | /api/todos/{id}/pin | Sabitleme durumunu değiştir |
-| GET | /health | Sağlık kontrolü |
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | /api/todos | Get all tasks for the authenticated user |
+| POST | /api/todos | Create a new task |
+| PUT | /api/todos/{id} | Update a task |
+| DELETE | /api/todos/{id} | Soft-delete a task |
+| PATCH | /api/todos/{id}/toggle | Toggle completion status |
+| PATCH | /api/todos/{id}/pin | Toggle pin status |
+| GET | /health | Health check |
 
 ---
 
-## 🧪 Testler
+## 🧪 Testing
 
-### Backend Entegrasyon Testleri
+### Backend Integration Tests
 
-xUnit + WebApplicationFactory + EF Core InMemory ile 27 entegrasyon testi:
+27 integration tests using xUnit + WebApplicationFactory + EF Core InMemory:
 
-- CRUD işlemleri (oluşturma, güncelleme, silme, toggle, pin)
-- Kimlik doğrulama ve kullanıcı izolasyonu
-- Profil yönetimi (email, şifre, hesap silme)
-- Soft delete senaryoları
+- CRUD operations (create, update, delete, toggle, pin)
+- Authentication and user isolation
+- Profile management (email, password, account deletion)
+- Soft delete scenarios
 
-### E2E Testler
+### E2E Tests
 
 ```bash
 cd mobile && npm run test:e2e
@@ -178,17 +178,17 @@ cd mobile && npm run test:e2e
 
 ---
 
-## 🎨 UI Tasarım
+## 🎨 UI Design
 
-- Gradient tabanlı arka plan (expo-linear-gradient)
-- Token tabanlı design system (`src/theme/tokens.ts`)
-- Reusable component mimarisi
-- Ionicons ikon seti
-- Platform uyumlu shadow ve spacing
+- Gradient-based background (expo-linear-gradient)
+- Token-based design system (`src/theme/tokens.ts`)
+- Reusable component architecture
+- Ionicons icon set
+- Platform-adaptive shadow and spacing
 
 ---
 
-## 🧑‍💻 Teknolojiler
+## 🧑‍💻 Tech Stack
 
 ### Backend
 
@@ -202,11 +202,12 @@ cd mobile && npm run test:e2e
 
 - React Native + Expo (managed workflow)
 - TypeScript
-- TanStack Query — server state yönetimi + offline kuyruk
-- AsyncStorage — kalıcı sorgu cache
-- expo-secure-store — JWT token ve kullanıcı bilgisi
-- expo-notifications — yerel bildirimler
-- expo-linear-gradient — UI gradient arka planı
+- TanStack Query — server state management + offline queue
+- AsyncStorage — persistent query cache
+- expo-secure-store — JWT token and user info storage
+- expo-notifications — local reminders
+- expo-linear-gradient — gradient UI background
+- @react-native-community/datetimepicker — native date/time picker
 - React Navigation v7
 
 ### Testing
@@ -216,21 +217,22 @@ cd mobile && npm run test:e2e
 
 ---
 
-## 📦 Release Geçmişi
+## 📦 Release History
 
-| Versiyon | Özellik |
-|----------|---------|
-| v0.1.0 | İlk mobil UI (React Native + Expo) |
-| v0.2.0 | SQLite kalıcı depolama (EF Core) |
-| v0.3.0 | Offline-first okuma (SWR + AsyncStorage cache) |
-| v0.4.0 | Offline yazma + senkronizasyon kuyruğu |
-| v0.5.0 | Yerel hatırlatıcılar (expo-notifications) |
-| v0.6.0 | JWT kimlik doğrulama ve kullanıcı veri izolasyonu |
-| v0.7.0 | Profil yönetimi (email, şifre, hesap silme) |
-| v0.8.0 | Soft delete mekanizması (Todo ve User) |
+| Version | Feature |
+|---------|---------|
+| v0.1.0 | Initial mobile UI (React Native + Expo) |
+| v0.2.0 | SQLite persistence (EF Core) |
+| v0.3.0 | Offline-first reads (SWR + AsyncStorage cache) |
+| v0.4.0 | Offline writes + sync queue (TanStack Query) |
+| v0.5.0 | Local reminders (expo-notifications) |
+| v0.6.0 | JWT authentication & user data isolation |
+| v0.7.0 | Profile management (email, password, account deletion) |
+| v0.8.0 | Soft delete for Todo and User records |
+| v0.9.0 | Native date/time picker (iOS & Android) |
 
 ---
 
-## 📄 Lisans
+## 📄 License
 
 MIT
