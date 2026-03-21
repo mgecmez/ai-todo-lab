@@ -15,6 +15,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     /// <summary>User tablosunu temsil eden koleksiyon.</summary>
     public DbSet<User> Users { get; set; }
 
+    /// <summary>RefreshToken tablosunu temsil eden koleksiyon.</summary>
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -112,6 +115,27 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
             entity.HasIndex(u => new { u.Email, u.IsDeleted })
                   .HasDatabaseName("IX_Users_Email_IsDeleted");
+        });
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(r => r.Id);
+
+            entity.Property(r => r.TokenHash)
+                  .IsRequired()
+                  .HasMaxLength(64);
+
+            entity.HasIndex(r => r.TokenHash)
+                  .IsUnique()
+                  .HasDatabaseName("IX_RefreshTokens_TokenHash");
+
+            entity.Property(r => r.ExpiresAt).IsRequired();
+            entity.Property(r => r.CreatedAt).IsRequired();
+
+            entity.HasOne(r => r.User)
+                  .WithMany()
+                  .HasForeignKey(r => r.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
