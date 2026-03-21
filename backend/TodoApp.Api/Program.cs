@@ -57,8 +57,10 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 
 // ── Rate Limiting ─────────────────────────────────────────────────────────────
-var loginWindowSeconds = builder.Configuration.GetValue<int>("RateLimit:LoginWindowSeconds", 900);
-var loginPermitLimit   = builder.Configuration.GetValue<int>("RateLimit:LoginPermitLimit", 5);
+var loginWindowSeconds    = builder.Configuration.GetValue<int>("RateLimit:LoginWindowSeconds", 900);
+var loginPermitLimit      = builder.Configuration.GetValue<int>("RateLimit:LoginPermitLimit", 5);
+var registerWindowSeconds = builder.Configuration.GetValue<int>("RateLimit:RegisterWindowSeconds", 3600);
+var registerPermitLimit   = builder.Configuration.GetValue<int>("RateLimit:RegisterPermitLimit", 10);
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -69,6 +71,19 @@ builder.Services.AddRateLimiter(options =>
             {
                 Window               = TimeSpan.FromSeconds(loginWindowSeconds),
                 PermitLimit          = loginPermitLimit,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit           = 0,
+            }
+        )
+    );
+
+    options.AddPolicy("register", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                Window               = TimeSpan.FromSeconds(registerWindowSeconds),
+                PermitLimit          = registerPermitLimit,
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 QueueLimit           = 0,
             }
@@ -87,7 +102,7 @@ builder.Services.AddRateLimiter(options =>
 
         context.HttpContext.Response.ContentType = "application/json";
         await context.HttpContext.Response.WriteAsync(
-            "{\"status\":429,\"message\":\"Çok fazla giriş denemesi. Lütfen daha sonra tekrar deneyin.\"}",
+            "{\"status\":429,\"message\":\"Çok fazla deneme yapıldı. Lütfen daha sonra tekrar deneyin.\"}",
             cancellationToken);
     };
 });
