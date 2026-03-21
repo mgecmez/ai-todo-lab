@@ -24,11 +24,13 @@ This project is a reference implementation developed through an **AI agent-drive
 - 📌 Pin tasks to the top of the list
 - 🏷 Label support
 - 📅 Due date with native date/time picker (iOS & Android)
+- 🌙 All-day mode — skip time selection, store date only
 - ⚡ Priority levels (Low / Normal / High / Urgent)
 - 🔎 Real-time search
 
 ### Notifications
 - 🔔 Local reminders (5 min / 15 min / 30 min / 1 hour / 1 day before due date)
+- 🔕 Automatic cancellation when a task is marked complete; reschedule on uncheck
 
 ### Offline & Sync
 - 📶 Offline-first data architecture
@@ -230,6 +232,7 @@ cd mobile && npm run test:e2e
 | v0.7.0 | Profile management (email, password, account deletion) |
 | v0.8.0 | Soft delete for Todo and User records |
 | v0.9.0 | Native date/time picker (iOS & Android) |
+| v0.10.0 | Quick wins — All-day mode, past-date warning, notification auto-cancel, code quality |
 
 ---
 
