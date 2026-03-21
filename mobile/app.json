@@ -4,6 +4,17 @@
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/PLACEHOLDER_PROJECT_ID"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "PLACEHOLDER_PROJECT_ID"
+      }
+    },
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
