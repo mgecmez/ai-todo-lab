@@ -1,6 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useLayoutEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
@@ -27,6 +28,13 @@ import { usePinTodo } from '../mutations/usePinTodo';
 import { friendlyErrorMessage } from '../utils/errorMessage';
 import { isLocalId } from '../utils/localId';
 
+const PRIORITY_LABEL_KEYS = {
+  low: 'todoForm.priority.low',
+  normal: 'todoForm.priority.normal',
+  high: 'todoForm.priority.high',
+  urgent: 'todoForm.priority.urgent',
+} as const;
+
 interface TodoItemProps {
   todo: Todo;
   busy: boolean;
@@ -39,6 +47,7 @@ interface TodoItemProps {
 }
 
 function TodoItem({ todo, busy, isPending, onDetail, onEdit, onToggle, onDelete, onPin }: TodoItemProps) {
+  const { t } = useTranslation();
   const priorityMeta = PRIORITY_META[todo.priority ?? 1];
   const overdue = isOverdue(todo.dueDate, todo.isCompleted);
   // Herhangi bir aksiyon kısıtlıysa tüm yazma butonları pasif olur.
@@ -84,7 +93,7 @@ function TodoItem({ todo, busy, isPending, onDetail, onEdit, onToggle, onDelete,
         <View style={styles.badgeRow}>
           <View style={[styles.priorityDot, { backgroundColor: priorityMeta.color }]} />
           <Text style={[styles.priorityLabel, { color: priorityMeta.color }]}>
-            {priorityMeta.label}
+            {t(PRIORITY_LABEL_KEYS[priorityMeta.key as keyof typeof PRIORITY_LABEL_KEYS])}
           </Text>
         </View>
 
@@ -96,7 +105,7 @@ function TodoItem({ todo, busy, isPending, onDetail, onEdit, onToggle, onDelete,
               color={colors.textOnCardMeta}
               style={styles.pendingSpinner}
             />
-            <Text style={styles.pendingLabel}>Senkronize bekleniyor</Text>
+            <Text style={styles.pendingLabel}>{t('todoList.pendingLabel')}</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -141,6 +150,8 @@ function TodoItem({ todo, busy, isPending, onDetail, onEdit, onToggle, onDelete,
 }
 
 export default function TodoListScreen({ navigation }: TodoListScreenProps) {
+  const { t } = useTranslation();
+
   // ── TanStack Query — okuma akışı ──────────────────────────────────────────
   const { todos, isLoading, isError, error, refetch } = useTodos();
 
@@ -160,6 +171,7 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
   // Header sağ üst köşesine profil butonu ekle.
   useLayoutEffect(() => {
     navigation.setOptions({
+      title: t('todoList.screenTitle'),
       headerRight: () => (
         <TouchableOpacity
           onPress={() => navigation.navigate('Profile')}
@@ -170,7 +182,7 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
         </TouchableOpacity>
       ),
     });
-  }, [navigation]);
+  }, [navigation, t]);
 
   // Ekran odağa geldiğinde (edit/create'den dönüş dahil) listeyi yenile.
   // useQuery refetchOnWindowFocus React Native'de otomatik tetiklenmez;
@@ -206,32 +218,32 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
   // ── Toggle ───────────────────────────────────────────────────────────────
   function handleToggle(id: string) {
     toggleMutation.mutate(id, {
-      onError: (e) => Alert.alert('Hata', friendlyErrorMessage(e)),
+      onError: (e) => Alert.alert(t('common.error'), friendlyErrorMessage(e)),
     });
   }
 
   // ── Pin ──────────────────────────────────────────────────────────────────
   function handlePin(id: string) {
     pinMutation.mutate(id, {
-      onError: (e) => Alert.alert('Hata', friendlyErrorMessage(e)),
+      onError: (e) => Alert.alert(t('common.error'), friendlyErrorMessage(e)),
     });
   }
 
   // ── Delete ───────────────────────────────────────────────────────────────
   function handleDeletePress(id: string) {
     Alert.alert(
-      'Görevi Sil',
-      'Bu görevi silmek istediğinizden emin misiniz?',
+      t('todoList.deleteTitle'),
+      t('todoList.deleteMessage'),
       [
-        { text: 'İptal', style: 'cancel' },
-        { text: 'Sil', style: 'destructive', onPress: () => handleDeleteConfirm(id) },
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('common.delete'), style: 'destructive', onPress: () => handleDeleteConfirm(id) },
       ],
     );
   }
 
   function handleDeleteConfirm(id: string) {
     deleteMutation.mutate(id, {
-      onError: (e) => Alert.alert('Hata', friendlyErrorMessage(e)),
+      onError: (e) => Alert.alert(t('common.error'), friendlyErrorMessage(e)),
     });
   }
 
@@ -241,7 +253,7 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
       <ScreenGradient>
         <View style={commonStyles.center}>
           <ActivityIndicator size="large" color={colors.textOnDark} />
-          <Text style={styles.hint}>Yükleniyor…</Text>
+          <Text style={styles.hint}>{t('common.loading')}</Text>
         </View>
       </ScreenGradient>
     );
@@ -251,13 +263,13 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
   // Cache'ten gelen eski veri varsa (todos.length > 0) listeyi gizleme;
   // kullanıcı stale veriyi görmeye devam eder.
   if (isError && todos.length === 0) {
-    const errorMessage = error instanceof Error ? error.message : 'Bir hata oluştu.';
+    const errorMessage = error instanceof Error ? error.message : t('todoList.errorGeneric');
     return (
       <ScreenGradient>
         <View style={commonStyles.center}>
           <Text style={commonStyles.screenErrorText}>⚠ {errorMessage}</Text>
           <TouchableOpacity style={commonStyles.retryBtn} onPress={() => refetch()}>
-            <Text style={commonStyles.retryText}>Tekrar Dene</Text>
+            <Text style={commonStyles.retryText}>{t('common.retry')}</Text>
           </TouchableOpacity>
         </View>
       </ScreenGradient>
@@ -291,7 +303,9 @@ export default function TodoListScreen({ navigation }: TodoListScreenProps) {
         contentContainerStyle={filteredTodos.length === 0 ? styles.emptyContainer : styles.list}
         ListEmptyComponent={
           <Text style={styles.emptyText}>
-            {todos.length === 0 ? 'Henüz görev yok.' : `"${query.trim()}" için sonuç bulunamadı.`}
+            {todos.length === 0
+            ? t('todoList.emptyState')
+            : t('todoList.noSearchResult', { query: query.trim() })}
           </Text>
         }
         refreshControl={

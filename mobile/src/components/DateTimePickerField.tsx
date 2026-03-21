@@ -2,6 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Modal,
   Platform,
@@ -42,9 +43,10 @@ export default function DateTimePickerField({
   value,
   onChange,
   disabled = false,
-  placeholder = 'Select date',
+  placeholder,
   allDay = false,
 }: DateTimePickerFieldProps) {
+  const { t } = useTranslation();
   // iOS için: hangi aşamadayız?
   const [phase, setPhase] = useState<PickerPhase>('closed');
   // iOS date aşamasındaki seçilen değeri time aşamasına taşımak için
@@ -152,7 +154,7 @@ export default function DateTimePickerField({
             style={[styles.triggerText, !displayText && styles.triggerPlaceholder]}
             numberOfLines={1}
           >
-            {displayText ?? placeholder}
+            {displayText ?? placeholder ?? t('dateTimePicker.placeholder')}
           </Text>
         </TouchableOpacity>
 
@@ -177,13 +179,13 @@ export default function DateTimePickerField({
               {/* Modal başlık satırı */}
               <View style={styles.modalHeader}>
                 <TouchableOpacity onPress={handleIOSCancel} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Text style={styles.modalCancel}>İptal</Text>
+                  <Text style={styles.modalCancel}>{t('dateTimePicker.cancel')}</Text>
                 </TouchableOpacity>
                 <Text style={styles.modalTitle}>
-                  {phase === 'date' ? 'Tarih Seç' : 'Saat Seç'}
+                  {phase === 'date' ? t('dateTimePicker.titleDate') : t('dateTimePicker.titleTime')}
                 </Text>
                 <TouchableOpacity onPress={handleIOSConfirm} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Text style={styles.modalConfirm}>Tamam</Text>
+                  <Text style={styles.modalConfirm}>{t('dateTimePicker.confirm')}</Text>
                 </TouchableOpacity>
               </View>
 

@@ -17,11 +17,11 @@ export type TodoPriority = typeof TODO_PRIORITY[keyof typeof TODO_PRIORITY];
  * Priority'nin kullanıcıya gösterilen etiket ve renk bilgileri.
  * TodoListScreen, TodoFormScreen ve TaskDetailScreen bu sabiti kullanır.
  */
-export const PRIORITY_META: Record<TodoPriority, { label: string; color: string }> = {
-  [TODO_PRIORITY.Low]:    { label: 'Düşük',  color: '#9E9E9E' },
-  [TODO_PRIORITY.Normal]: { label: 'Normal',  color: '#2196F3' },
-  [TODO_PRIORITY.High]:   { label: 'Yüksek', color: '#FF9800' },
-  [TODO_PRIORITY.Urgent]: { label: 'Acil',   color: '#F44336' },
+export const PRIORITY_META: Record<TodoPriority, { label: string; key: string; color: string }> = {
+  [TODO_PRIORITY.Low]:    { label: 'Düşük',  key: 'low',    color: '#9E9E9E' },
+  [TODO_PRIORITY.Normal]: { label: 'Normal', key: 'normal', color: '#2196F3' },
+  [TODO_PRIORITY.High]:   { label: 'Yüksek', key: 'high',   color: '#FF9800' },
+  [TODO_PRIORITY.Urgent]: { label: 'Acil',   key: 'urgent', color: '#F44336' },
 };
 
 // ── Todo ─────────────────────────────────────────────────────────────────────

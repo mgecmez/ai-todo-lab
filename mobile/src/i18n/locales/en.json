@@ -1,0 +1,145 @@
+{
+  "common": {
+    "loading": "Loading…",
+    "error": "Error",
+    "retry": "Try Again",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "ok": "OK",
+    "addNewTodo": "Add new task"
+  },
+  "todoList": {
+    "screenTitle": "My Tasks",
+    "emptyState": "No tasks yet.",
+    "noSearchResult": "No results found for \"{{query}}\".",
+    "deleteTitle": "Delete Task",
+    "deleteMessage": "Are you sure you want to delete this task?",
+    "pendingLabel": "Pending sync",
+    "errorGeneric": "Something went wrong."
+  },
+  "todoForm": {
+    "titleCreate": "New Task",
+    "titleEdit": "Edit Task",
+    "fieldTitle": "Title *",
+    "fieldDescription": "Description",
+    "fieldPriority": "Priority",
+    "fieldDueDate": "Due Date",
+    "fieldAllDay": "All Day",
+    "fieldPin": "Pin",
+    "fieldTags": "Tags",
+    "fieldReminder": "Reminder",
+    "placeholderTitle": "Task title",
+    "placeholderDescription": "Optional description",
+    "placeholderTags": "Add multiple tags separated by commas",
+    "reminderHint": "Set a due date before adding a reminder.",
+    "validationTitleRequired": "Title is required.",
+    "pastDateTitle": "Past Date",
+    "pastDateMessage": "The selected date is in the past. You can still save the task.",
+    "buttonSave": "Save",
+    "buttonUpdate": "Update",
+    "priority": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "reminder": {
+      "none": "None",
+      "5min": "5 min",
+      "15min": "15 min",
+      "30min": "30 min",
+      "1hour": "1 hour",
+      "1day": "1 day"
+    }
+  },
+  "taskDetail": {
+    "pendingBanner": "Saving to server…",
+    "statusCompleted": "Completed",
+    "statusInProgress": "In Progress",
+    "pinned": "Pinned",
+    "noDescription": "No description added.",
+    "actionEdit": "Edit",
+    "actionComplete": "Complete",
+    "actionUndo": "Undo",
+    "actionPin": "Pin",
+    "actionUnpin": "Unpin",
+    "actionDelete": "Delete",
+    "deleteTitle": "Delete Task",
+    "deleteMessage": "Are you sure you want to delete this task?"
+  },
+  "login": {
+    "title": "Welcome Back to DO IT",
+    "subtitle": "Have another productive day!",
+    "placeholderEmail": "Email",
+    "placeholderPassword": "Password",
+    "buttonLogin": "Sign In",
+    "linkNoAccount": "Don't have an account? ",
+    "linkRegister": "Sign Up",
+    "errorGeneric": "An error occurred during sign in."
+  },
+  "register": {
+    "title": "Welcome to DO IT",
+    "subtitle": "Create an account and join us now!",
+    "placeholderEmail": "Email",
+    "placeholderPassword": "Password",
+    "placeholderPasswordConfirm": "Confirm Password",
+    "buttonRegister": "Sign Up",
+    "linkHasAccount": "Already have an account? ",
+    "linkLogin": "Sign In",
+    "errorPasswordMismatch": "Passwords do not match.",
+    "errorGeneric": "An error occurred during registration."
+  },
+  "profile": {
+    "menuChangeEmail": "Change Email",
+    "menuChangePassword": "Change Password",
+    "menuSettings": "Settings",
+    "menuDeleteAccount": "Delete Account",
+    "buttonLogout": "Log Out",
+    "errorLoad": "Could not load profile information.",
+    "deleteModalTitle": "Delete Account",
+    "deleteModalWarning": "This action cannot be undone. All your data will be deleted.",
+    "deleteModalPlaceholder": "Enter your password",
+    "deleteModalButton": "Delete Account",
+    "deleteModalCancel": "Cancel",
+    "errorDeleteGeneric": "An error occurred while deleting the account."
+  },
+  "changeEmail": {
+    "labelNewEmail": "New Email",
+    "labelCurrentPassword": "Current Password",
+    "placeholderNewEmail": "Your new email address",
+    "placeholderPassword": "Enter your password to confirm the change",
+    "buttonSave": "Save",
+    "errorGeneric": "An error occurred while changing email."
+  },
+  "changePassword": {
+    "labelCurrentPassword": "Current Password",
+    "labelNewPassword": "New Password",
+    "labelConfirmPassword": "Confirm New Password",
+    "placeholderCurrent": "Enter your current password",
+    "placeholderNew": "Enter your new password",
+    "placeholderConfirm": "Re-enter your new password",
+    "buttonSave": "Save",
+    "buttonCancel": "Cancel",
+    "errorMismatch": "Passwords do not match.",
+    "errorGeneric": "An error occurred while changing password.",
+    "successMessage": "Your password has been updated successfully."
+  },
+  "settings": {
+    "screenTitle": "Settings",
+    "sectionLanguage": "Language",
+    "languageTurkish": "Türkçe",
+    "languageEnglish": "English"
+  },
+  "searchBar": {
+    "placeholder": "Search tasks..."
+  },
+  "dateTimePicker": {
+    "placeholder": "No date selected",
+    "cancel": "Cancel",
+    "confirm": "OK",
+    "titleDate": "Select Date",
+    "titleTime": "Select Time"
+  }
+}

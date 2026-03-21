@@ -5,6 +5,7 @@ import TodoListScreen from '../screens/TodoListScreen';
 import ChangeEmailScreen from '../screens/profile/ChangeEmailScreen';
 import ChangePasswordScreen from '../screens/profile/ChangePasswordScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 import { colors, fontSize } from '../theme/tokens';
 import type { AppStackParamList } from './types';
 
@@ -27,24 +28,13 @@ export default function AppNavigator() {
         headerShadowVisible: false,
       }}
     >
-      <Stack.Screen
-        name="TodoList"
-        component={TodoListScreen}
-        options={{ title: 'Görevlerim' }}
-      />
-      <Stack.Screen
-        name="TodoForm"
-        component={TodoFormScreen}
-        options={{ title: 'Yeni Görev' }}
-      />
-      <Stack.Screen
-        name="TaskDetail"
-        component={TaskDetailScreen}
-        options={{ title: 'Task Details' }}
-      />
-      <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profilim' }} />
-      <Stack.Screen name="ChangeEmail" component={ChangeEmailScreen} options={{ title: 'Email Değiştir' }} />
-      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Şifre Değiştir' }} />
+      <Stack.Screen name="TodoList" component={TodoListScreen} />
+      <Stack.Screen name="TodoForm" component={TodoFormScreen} />
+      <Stack.Screen name="TaskDetail" component={TaskDetailScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="ChangeEmail" component={ChangeEmailScreen} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
     </Stack.Navigator>
   );
 }

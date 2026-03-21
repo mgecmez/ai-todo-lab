@@ -1,7 +1,8 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   SafeAreaView,
@@ -21,8 +22,13 @@ import { commonStyles } from '../../theme/commonStyles';
 
 export default function ChangeEmailScreen() {
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
+  const { t } = useTranslation();
   const { updateEmail } = useAuth();
   const queryClient = useQueryClient();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ title: t('profile.menuChangeEmail') });
+  }, [navigation, t]);
 
   // ── Form state'leri ──────────────────────────────────────────────────────────
   const [currentPassword, setCurrentPassword] = useState('');
@@ -46,7 +52,7 @@ export default function ChangeEmailScreen() {
       const message =
         err instanceof Error
           ? err.message
-          : 'E-posta değiştirilirken bir hata oluştu.';
+          : t('changeEmail.errorGeneric');
       setError(message);
     } finally {
       setIsLoading(false);
@@ -63,10 +69,10 @@ export default function ChangeEmailScreen() {
           <View style={commonStyles.formCard}>
 
             {/* Yeni E-posta */}
-            <Text style={styles.label}>Yeni E-posta</Text>
+            <Text style={styles.label}>{t('changeEmail.labelNewEmail')}</Text>
             <TextInput
               style={commonStyles.formInput}
-              placeholder="Yeni e-posta adresiniz"
+              placeholder={t('changeEmail.placeholderNewEmail')}
               placeholderTextColor={colors.textPlaceholder}
               keyboardType="email-address"
               value={newEmail}
@@ -77,10 +83,10 @@ export default function ChangeEmailScreen() {
             />
 
             {/* Mevcut Şifre */}
-            <Text style={styles.label}>Mevcut Şifre</Text>
+            <Text style={styles.label}>{t('changeEmail.labelCurrentPassword')}</Text>
             <TextInput
               style={commonStyles.formInput}
-              placeholder="Değişikliği onaylamak için şifrenizi girin"
+              placeholder={t('changeEmail.placeholderPassword')}
               placeholderTextColor={colors.textPlaceholder}
               secureTextEntry
               value={currentPassword}
@@ -105,7 +111,7 @@ export default function ChangeEmailScreen() {
               {isLoading ? (
                 <ActivityIndicator size="small" color={colors.surfaceCard} />
               ) : (
-                <Text style={commonStyles.primaryBtnText}>Kaydet</Text>
+                <Text style={commonStyles.primaryBtnText}>{t('changeEmail.buttonSave')}</Text>
               )}
             </TouchableOpacity>
 

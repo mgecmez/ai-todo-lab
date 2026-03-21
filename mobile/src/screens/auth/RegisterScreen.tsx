@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -21,6 +22,7 @@ import type { AuthStackParamList } from '../../navigation/types';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
 export default function RegisterScreen({ navigation }: Props) {
+  const { t } = useTranslation();
   const { login: authLogin } = useAuth();
 
   const [email, setEmail]             = useState('');
@@ -34,7 +36,7 @@ export default function RegisterScreen({ navigation }: Props) {
 
     // Client-side şifre eşleşme kontrolü — API'ye gitmeden
     if (password !== passwordConfirm) {
-      setError('Şifreler eşleşmiyor.');
+      setError(t('register.errorPasswordMismatch'));
       return;
     }
 
@@ -43,7 +45,7 @@ export default function RegisterScreen({ navigation }: Props) {
       const res = await register(email.trim(), password);
       await authLogin(res.token, res.userId, res.email);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Kayıt sırasında bir hata oluştu.');
+      setError(e instanceof Error ? e.message : t('register.errorGeneric'));
     } finally {
       setIsLoading(false);
     }
@@ -65,15 +67,15 @@ export default function RegisterScreen({ navigation }: Props) {
           </View>
 
           {/* Başlık */}
-          <Text style={commonStyles.authTitle}>Welcome to DO IT</Text>
-          <Text style={commonStyles.authSubtitle}>create an account and Join us now!</Text>
+          <Text style={commonStyles.authTitle}>{t('register.title')}</Text>
+          <Text style={commonStyles.authSubtitle}>{t('register.subtitle')}</Text>
 
           {/* Email */}
           <View style={[commonStyles.authInputWrapper, error ? commonStyles.authInputError : null]}>
             <Ionicons name="mail-outline" size={18} color={colors.authInputIcon} style={commonStyles.authInputIcon} />
             <TextInput
               style={commonStyles.authInput}
-              placeholder="E-posta"
+              placeholder={t('register.placeholderEmail')}
               placeholderTextColor={colors.textAuthPlaceholder}
               value={email}
               onChangeText={setEmail}
@@ -89,7 +91,7 @@ export default function RegisterScreen({ navigation }: Props) {
             <Ionicons name="lock-closed-outline" size={18} color={colors.authInputIcon} style={commonStyles.authInputIcon} />
             <TextInput
               style={commonStyles.authInput}
-              placeholder="Şifre"
+              placeholder={t('register.placeholderPassword')}
               placeholderTextColor={colors.textAuthPlaceholder}
               value={password}
               onChangeText={setPassword}
@@ -100,11 +102,11 @@ export default function RegisterScreen({ navigation }: Props) {
           </View>
 
           {/* Şifre Tekrar */}
-          <View style={[commonStyles.authInputWrapper, error === 'Şifreler eşleşmiyor.' ? commonStyles.authInputError : null]}>
+          <View style={[commonStyles.authInputWrapper, error === t('register.errorPasswordMismatch') ? commonStyles.authInputError : null]}>
             <Ionicons name="lock-closed-outline" size={18} color={colors.authInputIcon} style={commonStyles.authInputIcon} />
             <TextInput
               style={commonStyles.authInput}
-              placeholder="Şifre Tekrar"
+              placeholder={t('register.placeholderPasswordConfirm')}
               placeholderTextColor={colors.textAuthPlaceholder}
               value={passwordConfirm}
               onChangeText={setPasswordConfirm}
@@ -132,7 +134,7 @@ export default function RegisterScreen({ navigation }: Props) {
             {isLoading ? (
               <ActivityIndicator size="small" color={colors.textOnDark} />
             ) : (
-              <Text style={commonStyles.authButtonText}>Kayıt Ol</Text>
+              <Text style={commonStyles.authButtonText}>{t('register.buttonRegister')}</Text>
             )}
           </TouchableOpacity>
 
@@ -143,8 +145,8 @@ export default function RegisterScreen({ navigation }: Props) {
             disabled={isLoading}
             activeOpacity={0.7}
           >
-            <Text style={commonStyles.authLinkMuted}>Zaten hesabın var mı? </Text>
-            <Text style={commonStyles.authLinkAccent}>Giriş Yap</Text>
+            <Text style={commonStyles.authLinkMuted}>{t('register.linkHasAccount')}</Text>
+            <Text style={commonStyles.authLinkAccent}>{t('register.linkLogin')}</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>

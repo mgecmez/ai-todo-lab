@@ -1,6 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp, ParamListBase } from '@react-navigation/native';
-import { useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   SafeAreaView,
@@ -19,6 +20,11 @@ import { commonStyles } from '../../theme/commonStyles';
 
 export default function ChangePasswordScreen() {
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
+  const { t } = useTranslation();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ title: t('profile.menuChangePassword') });
+  }, [navigation, t]);
 
   // ── Form state'leri ──────────────────────────────────────────────────────────
   const [currentPassword, setCurrentPassword] = useState('');
@@ -37,7 +43,7 @@ export default function ChangePasswordScreen() {
 
     // Yerel validasyon
     if (newPassword !== confirmPassword) {
-      setError('Şifreler eşleşmiyor.');
+      setError(t('changePassword.errorMismatch'));
       return;
     }
 
@@ -45,7 +51,7 @@ export default function ChangePasswordScreen() {
 
     try {
       await changePassword(currentPassword, newPassword);
-      setSuccessMessage('Şifreniz başarıyla güncellendi.');
+      setSuccessMessage(t('changePassword.successMessage'));
       // Kısa bir gecikme ile geri dön — kullanıcı mesajı görsün
       setTimeout(() => {
         navigation.goBack();
@@ -54,7 +60,7 @@ export default function ChangePasswordScreen() {
       const message =
         err instanceof Error
           ? err.message
-          : 'Şifre değiştirilirken bir hata oluştu.';
+          : t('changePassword.errorGeneric');
       setError(message);
     } finally {
       setIsSubmitting(false);
@@ -71,10 +77,10 @@ export default function ChangePasswordScreen() {
           <View style={commonStyles.formCard}>
 
             {/* Mevcut Şifre */}
-            <Text style={styles.label}>Mevcut Şifre</Text>
+            <Text style={styles.label}>{t('changePassword.labelCurrentPassword')}</Text>
             <TextInput
               style={commonStyles.formInput}
-              placeholder="Mevcut şifrenizi girin"
+              placeholder={t('changePassword.placeholderCurrent')}
               placeholderTextColor={colors.textPlaceholder}
               secureTextEntry
               value={currentPassword}
@@ -84,10 +90,10 @@ export default function ChangePasswordScreen() {
             />
 
             {/* Yeni Şifre */}
-            <Text style={styles.label}>Yeni Şifre</Text>
+            <Text style={styles.label}>{t('changePassword.labelNewPassword')}</Text>
             <TextInput
               style={commonStyles.formInput}
-              placeholder="Yeni şifrenizi girin"
+              placeholder={t('changePassword.placeholderNew')}
               placeholderTextColor={colors.textPlaceholder}
               secureTextEntry
               value={newPassword}
@@ -97,10 +103,10 @@ export default function ChangePasswordScreen() {
             />
 
             {/* Yeni Şifre Tekrar */}
-            <Text style={styles.label}>Yeni Şifre Tekrar</Text>
+            <Text style={styles.label}>{t('changePassword.labelConfirmPassword')}</Text>
             <TextInput
               style={commonStyles.formInput}
-              placeholder="Yeni şifrenizi tekrar girin"
+              placeholder={t('changePassword.placeholderConfirm')}
               placeholderTextColor={colors.textPlaceholder}
               secureTextEntry
               value={confirmPassword}
@@ -129,7 +135,7 @@ export default function ChangePasswordScreen() {
               {isSubmitting ? (
                 <ActivityIndicator size="small" color={colors.surfaceCard} />
               ) : (
-                <Text style={commonStyles.primaryBtnText}>Kaydet</Text>
+                <Text style={commonStyles.primaryBtnText}>{t('changePassword.buttonSave')}</Text>
               )}
             </TouchableOpacity>
 
@@ -140,7 +146,7 @@ export default function ChangePasswordScreen() {
               disabled={isSubmitting}
               activeOpacity={0.7}
             >
-              <Text style={commonStyles.outlineBtnText}>Vazgeç</Text>
+              <Text style={commonStyles.outlineBtnText}>{t('changePassword.buttonCancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>

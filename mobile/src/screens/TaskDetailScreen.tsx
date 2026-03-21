@@ -1,6 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
@@ -48,8 +49,20 @@ function ActionButton({ icon, iconColor, label, onPress, disabled = false }: Act
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
+const PRIORITY_LABEL_KEYS = {
+  low: 'todoForm.priority.low',
+  normal: 'todoForm.priority.normal',
+  high: 'todoForm.priority.high',
+  urgent: 'todoForm.priority.urgent',
+} as const;
+
 export default function TaskDetailScreen({ navigation, route }: TaskDetailScreenProps) {
+  const { t } = useTranslation();
   const [todo, setTodo] = useState<Todo>(route.params.todo);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ title: todo.title });
+  }, [navigation, todo.title]);
 
   // ── Mutation hook'ları ────────────────────────────────────────────────────
   const toggleMutation = useToggleTodo();
@@ -73,7 +86,7 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
   function handleToggle() {
     toggleMutation.mutate(todo.id, {
       onSuccess: (updated) => setTodo(updated),
-      onError: (e) => Alert.alert('Hata', friendlyErrorMessage(e)),
+      onError: (e) => Alert.alert(t('common.error'), friendlyErrorMessage(e)),
     });
   }
 
@@ -82,7 +95,7 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
   function handlePin() {
     pinMutation.mutate(todo.id, {
       onSuccess: (updated) => setTodo(updated),
-      onError: (e) => Alert.alert('Hata', friendlyErrorMessage(e)),
+      onError: (e) => Alert.alert(t('common.error'), friendlyErrorMessage(e)),
     });
   }
 
@@ -90,11 +103,11 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
 
   function handleDeletePress() {
     Alert.alert(
-      'Görevi Sil',
-      'Bu görevi silmek istediğinizden emin misiniz?',
+      t('taskDetail.deleteTitle'),
+      t('taskDetail.deleteMessage'),
       [
-        { text: 'İptal', style: 'cancel' },
-        { text: 'Sil', style: 'destructive', onPress: handleDeleteConfirm },
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('common.delete'), style: 'destructive', onPress: handleDeleteConfirm },
       ],
     );
   }
@@ -102,7 +115,7 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
   function handleDeleteConfirm() {
     deleteMutation.mutate(todo.id, {
       onSuccess: () => navigation.goBack(),
-      onError: (e) => Alert.alert('Hata', friendlyErrorMessage(e)),
+      onError: (e) => Alert.alert(t('common.error'), friendlyErrorMessage(e)),
     });
   }
 
@@ -124,7 +137,7 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
 
   // Virgülle ayrılmış tags → nokta · ile birleştir
   const tagList = todo.tags
-    ? todo.tags.split(',').map((t) => t.trim()).filter(Boolean)
+    ? todo.tags.split(',').map((tag) => tag.trim()).filter(Boolean)
     : [];
 
   return (
@@ -150,7 +163,7 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
         {isPending && (
           <View style={styles.pendingBanner}>
             <ActivityIndicator size="small" color={colors.textOnDarkSecondary} />
-            <Text style={styles.pendingBannerText}>Sunucuya kaydediliyor…</Text>
+            <Text style={styles.pendingBannerText}>{t('taskDetail.pendingBanner')}</Text>
           </View>
         )}
 
@@ -167,7 +180,7 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
               color={todo.isCompleted ? colors.done : colors.textOnDarkSecondary}
             />
             <Text style={[styles.metaText, todo.isCompleted && styles.metaCompleted]}>
-              {todo.isCompleted ? 'Tamamlandı' : 'Devam ediyor'}
+              {todo.isCompleted ? t('taskDetail.statusCompleted') : t('taskDetail.statusInProgress')}
             </Text>
           </View>
         </View>
@@ -178,7 +191,7 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
           <View style={styles.metaItem}>
             <View style={[styles.priorityDot, { backgroundColor: priorityMeta.color }]} />
             <Text style={[styles.metaText, { color: priorityMeta.color }]}>
-              {priorityMeta.label}
+              {t(PRIORITY_LABEL_KEYS[priorityMeta.key as keyof typeof PRIORITY_LABEL_KEYS])}
             </Text>
           </View>
 
@@ -200,7 +213,7 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
           {todo.isPinned ? (
             <View style={styles.metaItem}>
               <Ionicons name="pin" size={14} color={colors.pin} />
-              <Text style={[styles.metaText, styles.metaPinned]}>Sabitlenmiş</Text>
+              <Text style={[styles.metaText, styles.metaPinned]}>{t('taskDetail.pinned')}</Text>
             </View>
           ) : null}
         </View>
@@ -211,7 +224,7 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
             <Text style={styles.descriptionText}>{todo.description}</Text>
           </View>
         ) : (
-          <Text style={styles.noDescription}>Açıklama eklenmemiş.</Text>
+          <Text style={styles.noDescription}>{t('taskDetail.noDescription')}</Text>
         )}
 
         {/* ── Etiketler — sadece varsa göster ─────────────────── */}
@@ -227,28 +240,28 @@ export default function TaskDetailScreen({ navigation, route }: TaskDetailScreen
           <ActionButton
             icon="pencil"
             iconColor={colors.primary}
-            label="Düzenle"
+            label={t('taskDetail.actionEdit')}
             onPress={handleEdit}
             disabled={actionsDisabled}
           />
           <ActionButton
             icon={todo.isCompleted ? 'refresh-circle' : 'checkmark-circle'}
             iconColor={colors.done}
-            label={todo.isCompleted ? 'Geri Al' : 'Tamamla'}
+            label={todo.isCompleted ? t('taskDetail.actionUndo') : t('taskDetail.actionComplete')}
             onPress={handleToggle}
             disabled={actionsDisabled}
           />
           <ActionButton
             icon={todo.isPinned ? 'pin' : 'pin-outline'}
             iconColor={colors.pin}
-            label={todo.isPinned ? 'Çıkar' : 'Sabitle'}
+            label={todo.isPinned ? t('taskDetail.actionUnpin') : t('taskDetail.actionPin')}
             onPress={handlePin}
             disabled={actionsDisabled}
           />
           <ActionButton
             icon="trash"
             iconColor={colors.delete}
-            label="Sil"
+            label={t('taskDetail.actionDelete')}
             onPress={handleDeletePress}
             disabled={actionsDisabled}
           />

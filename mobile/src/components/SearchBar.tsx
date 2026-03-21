@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { colors, fontSize, radius, spacing } from '../theme/tokens';
 
@@ -11,8 +12,10 @@ interface SearchBarProps {
 export default function SearchBar({
   value,
   onChangeText,
-  placeholder = 'Görev ara...',
+  placeholder,
 }: SearchBarProps) {
+  const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder ?? t('searchBar.placeholder');
   return (
     <View style={styles.container}>
       <Ionicons name="search-outline" size={18} color={colors.textPlaceholder} style={styles.icon} />
@@ -20,7 +23,7 @@ export default function SearchBar({
         style={styles.input}
         value={value}
         onChangeText={onChangeText}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         placeholderTextColor={colors.textPlaceholder}
         returnKeyType="search"
         clearButtonMode="while-editing"

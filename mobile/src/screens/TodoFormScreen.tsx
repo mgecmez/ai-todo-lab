@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { isOverdue } from '../utils/isOverdue';
 import DateTimePickerField from '../components/DateTimePickerField';
 import FormField from '../components/FormField';
@@ -13,32 +14,33 @@ import { PRIORITY_META, TODO_PRIORITY, type TodoPriority } from '../types/todo';
 import { useCreateTodo } from '../mutations/useCreateTodo';
 import { useUpdateTodo } from '../mutations/useUpdateTodo';
 
-const PRIORITY_OPTIONS: { key: TodoPriority; label: string }[] = [
-  { key: TODO_PRIORITY.Low,    label: 'Düşük'  },
-  { key: TODO_PRIORITY.Normal, label: 'Normal' },
-  { key: TODO_PRIORITY.High,   label: 'Yüksek' },
-  { key: TODO_PRIORITY.Urgent, label: 'Acil'   },
-];
-
-// Faz 1 reminder preset'leri — dakika cinsinden; null = hatırlatma yok.
-const REMINDER_OPTIONS: { key: number | null; label: string }[] = [
-  { key: null, label: 'Yok'    },
-  { key: 5,    label: '5 dk'   },
-  { key: 15,   label: '15 dk'  },
-  { key: 30,   label: '30 dk'  },
-  { key: 60,   label: '1 saat' },
-  { key: 1440, label: '1 gün'  },
-];
-
 export default function TodoFormScreen({ navigation, route }: TodoFormScreenProps) {
+  const { t } = useTranslation();
   const isEdit = route.params.mode === 'edit';
   const editTodo = route.params.mode === 'edit' ? route.params.todo : undefined;
 
-  useEffect(() => {
+  const priorityOptions: { key: TodoPriority; label: string }[] = [
+    { key: TODO_PRIORITY.Low,    label: t('todoForm.priority.low') },
+    { key: TODO_PRIORITY.Normal, label: t('todoForm.priority.normal') },
+    { key: TODO_PRIORITY.High,   label: t('todoForm.priority.high') },
+    { key: TODO_PRIORITY.Urgent, label: t('todoForm.priority.urgent') },
+  ];
+
+  // Faz 1 reminder preset'leri — dakika cinsinden; null = hatırlatma yok.
+  const reminderOptions: { key: number | null; label: string }[] = [
+    { key: null,  label: t('todoForm.reminder.none') },
+    { key: 5,     label: t('todoForm.reminder.5min') },
+    { key: 15,    label: t('todoForm.reminder.15min') },
+    { key: 30,    label: t('todoForm.reminder.30min') },
+    { key: 60,    label: t('todoForm.reminder.1hour') },
+    { key: 1440,  label: t('todoForm.reminder.1day') },
+  ];
+
+  useLayoutEffect(() => {
     navigation.setOptions({
-      title: isEdit ? 'Görevi Düzenle' : 'Yeni Görev',
+      title: isEdit ? t('todoForm.titleEdit') : t('todoForm.titleCreate'),
     });
-  }, [navigation, isEdit]);
+  }, [navigation, isEdit, t]);
 
   const [title, setTitle] = useState(editTodo?.title ?? '');
   const [description, setDescription] = useState(editTodo?.description ?? '');
@@ -85,16 +87,16 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
       setAllDay(false);
     } else if (isOverdue(date.toISOString(), false)) {
       Alert.alert(
-        'Geçmiş Tarih',
-        'Seçilen tarih geçmiş bir zamana ait. Görevi yine de kaydedebilirsiniz.',
-        [{ text: 'Tamam' }],
+        t('todoForm.pastDateTitle'),
+        t('todoForm.pastDateMessage'),
+        [{ text: t('common.ok') }],
       );
     }
   }
 
   function handleSave() {
     if (title.trim().length === 0) {
-      setTitleError('Başlık alanı zorunludur.');
+      setTitleError(t('todoForm.validationTitleRequired'));
       return;
     }
     setTitleError(null);
@@ -148,13 +150,13 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
         showsVerticalScrollIndicator={false}
       >
         <FormField
-          label="Başlık *"
+          label={t('todoForm.fieldTitle')}
           value={title}
-          onChangeText={(t) => {
-            setTitle(t);
+          onChangeText={(text) => {
+            setTitle(text);
             if (titleError) setTitleError(null);
           }}
-          placeholder="Görev başlığı"
+          placeholder={t('todoForm.placeholderTitle')}
           icon="checkbox-outline"
           editable={!saving}
           returnKeyType="next"
@@ -162,10 +164,10 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
         />
 
         <FormField
-          label="Açıklama"
+          label={t('todoForm.fieldDescription')}
           value={description}
           onChangeText={setDescription}
-          placeholder="İsteğe bağlı açıklama"
+          placeholder={t('todoForm.placeholderDescription')}
           icon="reorder-three-outline"
           multiline
           editable={!saving}
@@ -173,9 +175,9 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
         />
 
         {/* ── Priority ── */}
-        <Text style={styles.fieldLabel}>Öncelik</Text>
+        <Text style={styles.fieldLabel}>{t('todoForm.fieldPriority')}</Text>
         <View style={styles.priorityGroup}>
-          {PRIORITY_OPTIONS.map((opt) => {
+          {priorityOptions.map((opt) => {
             const meta = PRIORITY_META[opt.key];
             const selected = priority === opt.key;
             return (
@@ -199,18 +201,18 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
 
         {/* ── Due Date — Native Picker ── */}
         <DateTimePickerField
-          label="Son Tarih"
+          label={t('todoForm.fieldDueDate')}
           value={dueDate}
           onChange={handleDueDateChange}
           disabled={saving}
-          placeholder="Tarih seçilmedi"
+          placeholder={t('dateTimePicker.placeholder')}
           allDay={allDay}
         />
 
         {/* ── All Day toggle — sadece dueDate seçiliyken göster ── */}
         {dueDate && (
           <View style={styles.switchRow}>
-            <Text style={styles.fieldLabel}>Tüm Gün</Text>
+            <Text style={styles.fieldLabel}>{t('todoForm.fieldAllDay')}</Text>
             <Switch
               value={allDay}
               onValueChange={setAllDay}
@@ -223,7 +225,7 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
 
         {/* ── IsPinned ── */}
         <View style={styles.switchRow}>
-          <Text style={styles.fieldLabel}>Sabitle</Text>
+          <Text style={styles.fieldLabel}>{t('todoForm.fieldPin')}</Text>
           <Switch
             value={isPinned}
             onValueChange={setIsPinned}
@@ -235,10 +237,10 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
 
         {/* ── Tags ── */}
         <FormField
-          label="Etiketler"
+          label={t('todoForm.fieldTags')}
           value={tags}
           onChangeText={setTags}
-          placeholder="Virgülle ayırarak birden fazla etiket ekleyebilirsiniz"
+          placeholder={t('todoForm.placeholderTags')}
           icon="pricetag-outline"
           editable={!saving}
           returnKeyType="done"
@@ -247,15 +249,15 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
         {/* ── Reminder ── */}
         {/* dueDate yoksa seçici görsel olarak soluklaşır ve devre dışıdır. */}
         <Text style={[styles.fieldLabel, !dueDate && styles.fieldLabelDisabled]}>
-          Hatırlatıcı
+          {t('todoForm.fieldReminder')}
         </Text>
         {!dueDate && (
           <Text style={styles.reminderHint}>
-            Son tarih belirlenmeden hatırlatıcı eklenemez.
+            {t('todoForm.reminderHint')}
           </Text>
         )}
         <View style={[styles.reminderGroup, !dueDate && styles.reminderGroupDisabled]}>
-          {REMINDER_OPTIONS.map((opt) => {
+          {reminderOptions.map((opt) => {
             const selected = reminderOffset === opt.key;
             return (
               <TouchableOpacity
@@ -279,12 +281,12 @@ export default function TodoFormScreen({ navigation, route }: TodoFormScreenProp
 
         <View style={styles.actions}>
           <SecondaryButton
-            label="İptal"
+            label={t('common.cancel')}
             onPress={navigation.goBack}
             disabled={saving}
           />
           <PrimaryButton
-            label={isEdit ? 'Güncelle' : 'Kaydet'}
+            label={isEdit ? t('todoForm.buttonUpdate') : t('todoForm.buttonSave')}
             onPress={handleSave}
             loading={saving}
           />

@@ -3,6 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Modal,
@@ -46,6 +47,7 @@ function formatDateTR(isoString: string): string {
 export default function ProfileScreen() {
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
   const { logout } = useAuth();
+  const { t } = useTranslation();
 
   // ── Profil verisi — TanStack Query ile ──────────────────────────────────────
   const {
@@ -77,7 +79,7 @@ export default function ProfileScreen() {
       await logout();
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : 'Hesap silinirken bir hata oluştu.';
+        err instanceof Error ? err.message : t('profile.errorDeleteGeneric');
       setDeleteError(message);
     } finally {
       setIsDeleting(false);
@@ -98,7 +100,7 @@ export default function ProfileScreen() {
         <SafeAreaView style={commonStyles.safeArea}>
           <View style={commonStyles.center}>
             <ActivityIndicator size="large" color={colors.textOnDark} />
-            <Text style={styles.loadingText}>Yükleniyor...</Text>
+            <Text style={styles.loadingText}>{t('common.loading')}</Text>
           </View>
         </SafeAreaView>
       </ScreenGradient>
@@ -112,10 +114,10 @@ export default function ProfileScreen() {
         <SafeAreaView style={commonStyles.safeArea}>
           <View style={commonStyles.center}>
             <Text style={commonStyles.screenErrorText}>
-              Profil bilgileri yüklenemedi.
+              {t('profile.errorLoad')}
             </Text>
             <TouchableOpacity style={commonStyles.retryBtn} onPress={() => refetch()}>
-              <Text style={commonStyles.retryText}>Tekrar Dene</Text>
+              <Text style={commonStyles.retryText}>{t('common.retry')}</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -154,7 +156,7 @@ export default function ProfileScreen() {
               activeOpacity={0.7}
             >
               <Ionicons name="mail-outline" size={20} color={colors.textOnCard} style={styles.menuIcon} />
-              <Text style={styles.menuLabel}>Email Değiştir</Text>
+              <Text style={styles.menuLabel}>{t('profile.menuChangeEmail')}</Text>
               <Text style={styles.menuChevron}>›</Text>
             </TouchableOpacity>
 
@@ -167,7 +169,20 @@ export default function ProfileScreen() {
               activeOpacity={0.7}
             >
               <Ionicons name="lock-closed-outline" size={20} color={colors.textOnCard} style={styles.menuIcon} />
-              <Text style={styles.menuLabel}>Şifre Değiştir</Text>
+              <Text style={styles.menuLabel}>{t('profile.menuChangePassword')}</Text>
+              <Text style={styles.menuChevron}>›</Text>
+            </TouchableOpacity>
+
+            <View style={styles.separator} />
+
+            {/* Ayarlar */}
+            <TouchableOpacity
+              style={styles.menuRow}
+              onPress={() => navigation.navigate('Settings')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="settings-outline" size={20} color={colors.textOnCard} style={styles.menuIcon} />
+              <Text style={styles.menuLabel}>{t('profile.menuSettings')}</Text>
               <Text style={styles.menuChevron}>›</Text>
             </TouchableOpacity>
 
@@ -181,7 +196,7 @@ export default function ProfileScreen() {
             >
               <Ionicons name="trash-outline" size={20} color={colors.delete} style={styles.menuIcon} />
               <Text style={[styles.menuLabel, styles.menuLabelDanger]}>
-                Hesabı Sil
+                {t('profile.menuDeleteAccount')}
               </Text>
               <Text style={[styles.menuChevron, styles.menuChevronDanger]}>›</Text>
             </TouchableOpacity>
@@ -194,7 +209,7 @@ export default function ProfileScreen() {
             activeOpacity={0.8}
           >
             <Ionicons name="log-out-outline" size={20} color={colors.delete} />
-            <Text style={styles.logoutText}>Çıkış Yap</Text>
+            <Text style={styles.logoutText}>{t('profile.buttonLogout')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -208,15 +223,15 @@ export default function ProfileScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Hesabı Sil</Text>
+            <Text style={styles.modalTitle}>{t('profile.deleteModalTitle')}</Text>
 
             <Text style={styles.modalWarning}>
-              Bu işlem geri alınamaz. Tüm verileriniz silinecektir.
+              {t('profile.deleteModalWarning')}
             </Text>
 
             <TextInput
               style={styles.modalInput}
-              placeholder="Şifrenizi girin"
+              placeholder={t('profile.deleteModalPlaceholder')}
               placeholderTextColor={colors.textPlaceholder}
               secureTextEntry
               value={currentPassword}
@@ -240,7 +255,7 @@ export default function ProfileScreen() {
               {isDeleting ? (
                 <ActivityIndicator size="small" color={colors.surfaceCard} />
               ) : (
-                <Text style={styles.modalDeleteText}>Hesabı Sil</Text>
+                <Text style={styles.modalDeleteText}>{t('profile.deleteModalButton')}</Text>
               )}
             </TouchableOpacity>
 
@@ -250,7 +265,7 @@ export default function ProfileScreen() {
               disabled={isDeleting}
               activeOpacity={0.7}
             >
-              <Text style={commonStyles.outlineBtnText}>Vazgeç</Text>
+              <Text style={commonStyles.outlineBtnText}>{t('profile.deleteModalCancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>

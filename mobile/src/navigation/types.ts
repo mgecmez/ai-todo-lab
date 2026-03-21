@@ -28,6 +28,9 @@ export type AppStackParamList = {
 
   /** Şifre değiştirme ekranı — parametre almaz */
   ChangePassword: undefined;
+
+  /** Ayarlar ekranı — parametre almaz */
+  Settings: undefined;
 };
 
 /**
@@ -47,3 +50,4 @@ export type TaskDetailScreenProps = NativeStackScreenProps<AppStackParamList, 'T
 export type ProfileScreenProps = NativeStackScreenProps<AppStackParamList, 'Profile'>;
 export type ChangeEmailScreenProps = NativeStackScreenProps<AppStackParamList, 'ChangeEmail'>;
 export type ChangePasswordScreenProps = NativeStackScreenProps<AppStackParamList, 'ChangePassword'>;
+export type SettingsScreenProps = NativeStackScreenProps<AppStackParamList, 'Settings'>;

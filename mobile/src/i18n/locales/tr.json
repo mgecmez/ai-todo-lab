@@ -1,0 +1,145 @@
+{
+  "common": {
+    "loading": "Yükleniyor…",
+    "error": "Hata",
+    "retry": "Tekrar Dene",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "ok": "Tamam",
+    "addNewTodo": "Yeni görev ekle"
+  },
+  "todoList": {
+    "screenTitle": "Görevlerim",
+    "emptyState": "Henüz görev yok.",
+    "noSearchResult": "\"{{query}}\" için sonuç bulunamadı.",
+    "deleteTitle": "Görevi Sil",
+    "deleteMessage": "Bu görevi silmek istediğinizden emin misiniz?",
+    "pendingLabel": "Senkronize bekleniyor",
+    "errorGeneric": "Bir hata oluştu."
+  },
+  "todoForm": {
+    "titleCreate": "Yeni Görev",
+    "titleEdit": "Görevi Düzenle",
+    "fieldTitle": "Başlık *",
+    "fieldDescription": "Açıklama",
+    "fieldPriority": "Öncelik",
+    "fieldDueDate": "Son Tarih",
+    "fieldAllDay": "Tüm Gün",
+    "fieldPin": "Sabitle",
+    "fieldTags": "Etiketler",
+    "fieldReminder": "Hatırlatıcı",
+    "placeholderTitle": "Görev başlığı",
+    "placeholderDescription": "İsteğe bağlı açıklama",
+    "placeholderTags": "Virgülle ayırarak birden fazla etiket ekleyebilirsiniz",
+    "reminderHint": "Son tarih belirlenmeden hatırlatıcı eklenemez.",
+    "validationTitleRequired": "Başlık alanı zorunludur.",
+    "pastDateTitle": "Geçmiş Tarih",
+    "pastDateMessage": "Seçilen tarih geçmiş bir zamana ait. Görevi yine de kaydedebilirsiniz.",
+    "buttonSave": "Kaydet",
+    "buttonUpdate": "Güncelle",
+    "priority": {
+      "low": "Düşük",
+      "normal": "Normal",
+      "high": "Yüksek",
+      "urgent": "Acil"
+    },
+    "reminder": {
+      "none": "Yok",
+      "5min": "5 dk",
+      "15min": "15 dk",
+      "30min": "30 dk",
+      "1hour": "1 saat",
+      "1day": "1 gün"
+    }
+  },
+  "taskDetail": {
+    "pendingBanner": "Sunucuya kaydediliyor…",
+    "statusCompleted": "Tamamlandı",
+    "statusInProgress": "Devam ediyor",
+    "pinned": "Sabitlenmiş",
+    "noDescription": "Açıklama eklenmemiş.",
+    "actionEdit": "Düzenle",
+    "actionComplete": "Tamamla",
+    "actionUndo": "Geri Al",
+    "actionPin": "Sabitle",
+    "actionUnpin": "Çıkar",
+    "actionDelete": "Sil",
+    "deleteTitle": "Görevi Sil",
+    "deleteMessage": "Bu görevi silmek istediğinizden emin misiniz?"
+  },
+  "login": {
+    "title": "Welcome Back to DO IT",
+    "subtitle": "Have another productive day!",
+    "placeholderEmail": "E-posta",
+    "placeholderPassword": "Şifre",
+    "buttonLogin": "Giriş Yap",
+    "linkNoAccount": "Hesabın yok mu? ",
+    "linkRegister": "Kayıt Ol",
+    "errorGeneric": "Giriş sırasında bir hata oluştu."
+  },
+  "register": {
+    "title": "Welcome to DO IT",
+    "subtitle": "Create an account and join us now!",
+    "placeholderEmail": "E-posta",
+    "placeholderPassword": "Şifre",
+    "placeholderPasswordConfirm": "Şifre Tekrar",
+    "buttonRegister": "Kayıt Ol",
+    "linkHasAccount": "Zaten hesabın var mı? ",
+    "linkLogin": "Giriş Yap",
+    "errorPasswordMismatch": "Şifreler eşleşmiyor.",
+    "errorGeneric": "Kayıt sırasında bir hata oluştu."
+  },
+  "profile": {
+    "menuChangeEmail": "Email Değiştir",
+    "menuChangePassword": "Şifre Değiştir",
+    "menuSettings": "Ayarlar",
+    "menuDeleteAccount": "Hesabı Sil",
+    "buttonLogout": "Çıkış Yap",
+    "errorLoad": "Profil bilgileri yüklenemedi.",
+    "deleteModalTitle": "Hesabı Sil",
+    "deleteModalWarning": "Bu işlem geri alınamaz. Tüm verileriniz silinecektir.",
+    "deleteModalPlaceholder": "Şifrenizi girin",
+    "deleteModalButton": "Hesabı Sil",
+    "deleteModalCancel": "Vazgeç",
+    "errorDeleteGeneric": "Hesap silinirken bir hata oluştu."
+  },
+  "changeEmail": {
+    "labelNewEmail": "Yeni E-posta",
+    "labelCurrentPassword": "Mevcut Şifre",
+    "placeholderNewEmail": "Yeni e-posta adresiniz",
+    "placeholderPassword": "Değişikliği onaylamak için şifrenizi girin",
+    "buttonSave": "Kaydet",
+    "errorGeneric": "E-posta değiştirilirken bir hata oluştu."
+  },
+  "changePassword": {
+    "labelCurrentPassword": "Mevcut Şifre",
+    "labelNewPassword": "Yeni Şifre",
+    "labelConfirmPassword": "Yeni Şifre Tekrar",
+    "placeholderCurrent": "Mevcut şifrenizi girin",
+    "placeholderNew": "Yeni şifrenizi girin",
+    "placeholderConfirm": "Yeni şifrenizi tekrar girin",
+    "buttonSave": "Kaydet",
+    "buttonCancel": "Vazgeç",
+    "errorMismatch": "Şifreler eşleşmiyor.",
+    "errorGeneric": "Şifre değiştirilirken bir hata oluştu.",
+    "successMessage": "Şifreniz başarıyla güncellendi."
+  },
+  "settings": {
+    "screenTitle": "Ayarlar",
+    "sectionLanguage": "Dil",
+    "languageTurkish": "Türkçe",
+    "languageEnglish": "English"
+  },
+  "searchBar": {
+    "placeholder": "Görev ara..."
+  },
+  "dateTimePicker": {
+    "placeholder": "Tarih seçilmedi",
+    "cancel": "İptal",
+    "confirm": "Tamam",
+    "titleDate": "Tarih Seç",
+    "titleTime": "Saat Seç"
+  }
+}

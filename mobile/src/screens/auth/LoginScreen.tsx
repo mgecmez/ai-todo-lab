@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -21,6 +22,7 @@ import type { AuthStackParamList } from '../../navigation/types';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export default function LoginScreen({ navigation }: Props) {
+  const { t } = useTranslation();
   const { login: authLogin } = useAuth();
 
   const [email, setEmail]       = useState('');
@@ -35,7 +37,7 @@ export default function LoginScreen({ navigation }: Props) {
       const res = await login(email.trim(), password);
       await authLogin(res.token, res.userId, res.email);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Giriş sırasında bir hata oluştu.');
+      setError(e instanceof Error ? e.message : t('login.errorGeneric'));
     } finally {
       setIsLoading(false);
     }
@@ -57,15 +59,15 @@ export default function LoginScreen({ navigation }: Props) {
           </View>
 
           {/* Başlık */}
-          <Text style={commonStyles.authTitle}>Welcome Back to DO IT</Text>
-          <Text style={commonStyles.authSubtitle}>Have an other productive day !</Text>
+          <Text style={commonStyles.authTitle}>{t('login.title')}</Text>
+          <Text style={commonStyles.authSubtitle}>{t('login.subtitle')}</Text>
 
           {/* Email */}
           <View style={[commonStyles.authInputWrapper, error ? commonStyles.authInputError : null]}>
             <Ionicons name="mail-outline" size={18} color={colors.authInputIcon} style={commonStyles.authInputIcon} />
             <TextInput
               style={commonStyles.authInput}
-              placeholder="E-posta"
+              placeholder={t('login.placeholderEmail')}
               placeholderTextColor={colors.textAuthPlaceholder}
               value={email}
               onChangeText={setEmail}
@@ -81,7 +83,7 @@ export default function LoginScreen({ navigation }: Props) {
             <Ionicons name="lock-closed-outline" size={18} color={colors.authInputIcon} style={commonStyles.authInputIcon} />
             <TextInput
               style={commonStyles.authInput}
-              placeholder="Şifre"
+              placeholder={t('login.placeholderPassword')}
               placeholderTextColor={colors.textAuthPlaceholder}
               value={password}
               onChangeText={setPassword}
@@ -109,7 +111,7 @@ export default function LoginScreen({ navigation }: Props) {
             {isLoading ? (
               <ActivityIndicator size="small" color={colors.textOnDark} />
             ) : (
-              <Text style={commonStyles.authButtonText}>Giriş Yap</Text>
+              <Text style={commonStyles.authButtonText}>{t('login.buttonLogin')}</Text>
             )}
           </TouchableOpacity>
 
@@ -120,8 +122,8 @@ export default function LoginScreen({ navigation }: Props) {
             disabled={isLoading}
             activeOpacity={0.7}
           >
-            <Text style={commonStyles.authLinkMuted}>Hesabın yok mu? </Text>
-            <Text style={commonStyles.authLinkAccent}>Kayıt Ol</Text>
+            <Text style={commonStyles.authLinkMuted}>{t('login.linkNoAccount')}</Text>
+            <Text style={commonStyles.authLinkAccent}>{t('login.linkRegister')}</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
