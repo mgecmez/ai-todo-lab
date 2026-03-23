@@ -1,3 +1,4 @@
+import './src/services/monitoring/sentry';
 import './src/i18n/i18n';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';

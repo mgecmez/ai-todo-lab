@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQueryClient } from '@tanstack/react-query';
+import * as Sentry from '@sentry/react-native';
 import * as SecureStore from 'expo-secure-store';
 import React, {
   createContext,
@@ -83,10 +84,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ]);
 
         if (!cancelled) {
+          if (token && userId) {
+            Sentry.setUser({ id: userId, email: email ?? undefined });
+          } else {
+            Sentry.setUser(null);
+          }
           setState({ token, refreshToken: storedRefreshToken, userId, email, isLoading: false });
         }
       } catch {
         if (!cancelled) {
+          Sentry.setUser(null);
           setState({ token: null, refreshToken: null, userId: null, email: null, isLoading: false });
         }
       }
@@ -123,6 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await AsyncStorage.removeItem(`todos_cache_${currentUserId}`);
     }
 
+    Sentry.setUser(null);
     setState({ token: null, refreshToken: null, userId: null, email: null, isLoading: false });
   }, [queryClient]);
 
@@ -139,6 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         SecureStore.setItemAsync(KEY_USER_ID, userId),
         SecureStore.setItemAsync(KEY_EMAIL, email),
       ]);
+      Sentry.setUser({ id: userId, email });
       setState({ token: accessToken, refreshToken, userId, email, isLoading: false });
     },
     [],

@@ -6,6 +6,7 @@
  * Login/register/refresh endpoint'leri bu döngünün dışında kalmalıdır.
  */
 
+import { captureAuthError } from '../monitoring/sentry';
 import { API_BASE_URL } from './config';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -39,35 +40,50 @@ export async function loginApi(
   email: string,
   password: string,
 ): Promise<AuthResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
-  return parseAuthResponse(response);
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    return await parseAuthResponse(response);
+  } catch (error) {
+    captureAuthError(error, { operation: 'login' });
+    throw error;
+  }
 }
 
 export async function registerApi(
   email: string,
   password: string,
 ): Promise<AuthResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
-  return parseAuthResponse(response);
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    return await parseAuthResponse(response);
+  } catch (error) {
+    captureAuthError(error, { operation: 'register' });
+    throw error;
+  }
 }
 
 export async function refreshTokenApi(
   refreshToken: string,
 ): Promise<AuthResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken }),
-  });
-  return parseAuthResponse(response);
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+    return await parseAuthResponse(response);
+  } catch (error) {
+    captureAuthError(error, { operation: 'refresh' });
+    throw error;
+  }
 }
 
 export async function logoutApi(

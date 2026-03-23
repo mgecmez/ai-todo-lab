@@ -1,4 +1,5 @@
-import { QueryClient } from '@tanstack/react-query';
+import { MutationCache, QueryClient } from '@tanstack/react-query';
+import { captureOfflineSyncError } from '../services/monitoring/sentry';
 
 /**
  * Uygulama genelinde tek QueryClient instance'ı.
@@ -36,6 +37,14 @@ import { QueryClient } from '@tanstack/react-query';
  *   yeniden denenebilir hata olarak işaretlemez.
  */
 export const queryClient = new QueryClient({
+  mutationCache: new MutationCache({
+    onError: (error, _variables, _context, mutation) => {
+      captureOfflineSyncError(error, {
+        mutationKey: JSON.stringify(mutation.options.mutationKey ?? 'unknown'),
+        failureCount: mutation.state.failureCount,
+      });
+    },
+  }),
   defaultOptions: {
     queries: {
       networkMode: 'offlineFirst',
